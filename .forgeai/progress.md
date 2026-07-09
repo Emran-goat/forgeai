@@ -49,15 +49,16 @@
 ## Phase 5: Polish & Demo
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 5.1 | End-to-end testing | Pending | |
-| 5.2 | Demo script | Pending | |
+| 5.1 | End-to-end testing | Complete | All 8 verification items pass |
+| 5.2 | Demo script | Complete | `DEMO_SCRIPT.md` — 7 sections, ~110 words, humanized |
 | 5.3 | README + docs | Complete | Root README with architecture, API, quickstart |
 | 5.4 | Demo video | Complete | Remotion 1920×1080, 56s, 3.3 MB, 8 scenes |
-| 5.5 | Final polish | Pending | |
-| 5.6 | Deploy + submit | Pending | |
+| 5.5 | Final polish | Complete | README humanized, code reviewed |
+| 5.6 | Deploy + submit | In Progress | GitHub pushed, HuggingFace pending |
 | 5.7 | Fireworks AI integration | Complete | API client, benchmark endpoint, AMD MI300X backend |
 | 5.8 | Docker setup | Complete | Dockerfile, docker-compose.yml, .dockerignore, deploy.sh |
 | 5.9 | Deployment config | Complete | HuggingFace Spaces metadata, deployment instructions |
+| 5.10 | GitHub push | Complete | https://github.com/Emran-goat/forgeai |
 
 ## Verification
 - [x] `mypy --strict` passes on all core modules

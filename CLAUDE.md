@@ -7,8 +7,9 @@
 ## Current State
 - **Phase:** 5 (Polish & Demo) — In Progress
 - **Day:** 1
-- **Status:** Phases 1-4 complete. Remotion video rendered (56s, 3.3 MB). README written. Demo index updated.
+- **Status:** Phases 1-4 complete. Remotion video rendered (56s, 3.3 MB). README written. Demo index updated. GitHub pushed.
 - **Build:** 7 routes compile clean (8 static pages + 7 demo HTML + 1 Remotion video)
+- **GitHub:** https://github.com/Emran-goat/forgeai
 
 ## Architecture Decisions
 | Decision | Choice | ADR |
@@ -44,7 +45,7 @@
 - Pydantic v2 for all schemas
 
 ## Current Task
-Phase 4 complete. Next: Phase 5 — End-to-end testing, demo script, README, deploy.
+Phase 5 in progress. GitHub pushed. Next: Deploy to HuggingFace Spaces, create slides, cover image, submit to lablab.ai.
 
 ## Core Engine Status
 | Module | Status | Key Classes |

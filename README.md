@@ -1,21 +1,29 @@
 # ForgeAI
 
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/imports-isort-1674b1.svg)](https://pycqa.github.io/isort/)
+[![Type checked: mypy](https://img.shields.io/badge/type%20checked-mypy-9b59b6.svg)](https://mypy-lang.org/)
+[![Tests](https://img.shields.io/badge/tests-pytest-brightgreen.svg)](https://docs.pytest.org/)
+[![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg)](https://www.docker.com/)
+[![ROCm](https://img.shields.io/badge/ROCm-6.0+-ED1C24.svg)](https://rocm.docs.amd.com/)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-Spaces-yellow.svg)](https://huggingface.co/spaces)
+
 **The compiler for efficient AI models.**
 
-ForgeAI finds the fastest, most efficient version of any AI model for your target hardware. Upload a model, specify your constraints, and get an optimized export running on AMD MI300X GPUs.
+ForgeAI automatically finds the fastest, most efficient version of any AI model for your target hardware. Upload a model, specify your constraints, and get an optimized export running on AMD MI300X GPUs.
 
-## What it does
+[Paper](#) | [Demo](#demo-video) | [API Reference](#api) | [Contributing](CONTRIBUTING.md)
 
-ForgeAI runs a 6-phase optimization pipeline:
+## Key Features
 
-1. **Architecture Search** -- explores student architectures (ViT variants, ResNet, MobileNet) that trade off accuracy for speed
-2. **Knowledge Distillation** -- trains smaller models to mimic the original using soft targets and feature alignment
-3. **Pruning** -- removes redundant weights (structured, unstructured, movement-based)
-4. **Quantization** -- reduces precision (INT8, INT4, FP8) with optional quantization-aware training
-5. **Benchmarking** -- measures real latency, throughput, and memory on target hardware
-6. **Pareto Analysis** -- finds the optimal accuracy-speed tradeoff and selects the knee point
-
-The result: a model that runs 2-10x faster with minimal accuracy loss, exported as ONNX or TorchScript.
+- **6-phase optimization pipeline** -- Architecture search, distillation, pruning, quantization, benchmarking, Pareto analysis
+- **Multi-objective optimization** -- Latency, memory, and accuracy on the Pareto frontier
+- **Hardware-aware** -- Benchmarks against real AMD GPU specs (MI300X, MI250X)
+- **Live progress** -- WebSocket-streamed optimization phases to the UI
+- **Fireworks AI integration** -- Hosted inference on AMD MI300X via Fireworks API
+- **One-click export** -- ONNX and TorchScript with automatic optimization flags
 
 ## Architecture
 
@@ -32,30 +40,42 @@ forgeai/
 └── forgeai-demo/         # Remotion video project (1920×1080)
 ```
 
-## Quick start
+## Installation
 
-### Backend
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+- AMD GPU with ROCm 6.0+ (optional, for local benchmarking)
+
+### Backend Setup
 
 ```bash
+# Clone the repository
+git clone https://github.com/Emran-goat/forgeai.git
+cd forgeai
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or
+venv\Scripts\activate  # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+pip install -r requirements-dev.txt
+
+# Start the server
 cd backend
-pip install -e .
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Frontend
+### Frontend Setup
 
 ```bash
 cd frontend
 npm install
 npm run dev
-```
-
-### Demo pages
-
-```bash
-cd demo
-python -m http.server 8080
-# Open http://localhost:8080
 ```
 
 ### Docker
@@ -73,7 +93,7 @@ chmod +x deploy.sh
 ./deploy.sh
 ```
 
-### Deploy to HuggingFace Spaces
+### HuggingFace Spaces
 
 1. Push to GitHub
 2. Go to [huggingface.co/new-space](https://huggingface.co/new-space)
@@ -82,7 +102,80 @@ chmod +x deploy.sh
 5. Set `FIREWORKS_API_KEY` in Space secrets
 6. Deploy
 
-## Tech stack
+## Usage
+
+### Upload a Model
+
+```python
+import requests
+
+# Upload a PyTorch checkpoint
+files = {'file': open('model.pth', 'rb')}
+response = requests.post('http://localhost:8000/api/models', files=files)
+model_id = response.json()['id']
+```
+
+### Start Optimization
+
+```python
+# Create optimization job
+data = {
+    'model_id': model_id,
+    'hardware': 'MI300X',
+    'constraints': {
+        'max_latency_ms': 50,
+        'max_memory_mb': 1024,
+        'min_accuracy': 0.95
+    }
+}
+response = requests.post('http://localhost:8000/api/optimizations', json=data)
+job_id = response.json()['id']
+```
+
+### Monitor Progress
+
+```python
+import websocket
+import json
+
+ws = websocket.create_connection(f'ws://localhost:8000/ws/{job_id}')
+while True:
+    message = json.loads(ws.recv())
+    print(f"Phase: {message['phase']}, Progress: {message['progress']}%")
+    if message.get('completed'):
+        break
+```
+
+### Export Optimized Model
+
+```python
+# Export to ONNX
+data = {
+    'optimization_id': job_id,
+    'format': 'onnx'
+}
+response = requests.post('http://localhost:8000/api/exports', json=data)
+# Download the exported model
+```
+
+## API Reference
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/models` | POST | Upload a model |
+| `/api/models/{id}` | GET | Get model info |
+| `/api/optimizations` | POST | Start optimization job |
+| `/api/optimizations/{id}` | GET | Check job status |
+| `/api/candidates` | GET | List candidate architectures |
+| `/api/benchmarks` | GET | Query benchmark results |
+| `/api/benchmarks/fireworks` | GET | Benchmark Fireworks AI on AMD MI300X |
+| `/api/exports` | POST | Export optimized model |
+| `/api/exports/{id}` | GET | Get export info |
+| `/api/hardware` | GET | Get hardware specs |
+| `/ws/{job_id}` | WS | Live progress stream |
+| `/health` | GET | Health check |
+
+## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
@@ -90,33 +183,11 @@ chmod +x deploy.sh
 | ML | PyTorch 2.2+, ROCm 6.0+, timm |
 | Database | SQLite + aiosqlite |
 | Frontend | Next.js 14, Tailwind CSS, shadcn/ui, Recharts |
-| Video | Remotion (1920×1080, 30fps) |
+| Video | Remotion (1920x1080, 30fps) |
 | Cloud Inference | Fireworks AI (AMD Instinct MI300X backend) |
 | Target GPU | AMD MI300X (192GB HBM3) |
 
-## Key features
-
-- **Multi-objective optimization** -- latency, memory, and accuracy on the Pareto frontier
-- **Live progress** -- WebSocket-streamed optimization phases to the UI
-- **Hardware-aware** -- benchmarks against real AMD GPU specs (MI300X, MI250X)
-- **Fireworks AI integration** -- hosted inference on AMD MI300X via Fireworks API
-- **One-click export** -- ONNX and TorchScript with automatic optimization flags
-- **6-phase pipeline** -- architecture search, distillation, pruning, quantization, benchmark, Pareto selection
-
-## API
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/models` | POST | Upload a model |
-| `/api/optimizations` | POST | Start optimization job |
-| `/api/optimizations/{id}` | GET | Check job status |
-| `/api/candidates` | GET | List candidate architectures |
-| `/api/benchmarks` | GET | Query benchmark results |
-| `/api/benchmarks/fireworks` | GET | Benchmark Fireworks AI on AMD MI300X |
-| `/api/exports` | POST | Export optimized model |
-| `/ws/{job_id}` | WS | Live progress stream |
-
-## Demo video
+## Demo Video
 
 The 56-second Remotion demo video is at `demo/forgeai-demo.mp4`. It covers the full pipeline from upload to export with Japanese minimalist motion design.
 
@@ -132,6 +203,29 @@ The Fireworks integration is visible in:
 - `backend/api/benchmarks.py` -- `/benchmarks/fireworks` endpoint
 - Demo page 04 (Benchmark Charts) shows Fireworks vs local comparison
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to ForgeAI.
+
 ## License
 
-MIT
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Citation
+
+If you find ForgeAI useful, please cite:
+
+```bibtex
+@software{forgeai2024,
+  title={ForgeAI: Hardware-Aware AI Model Optimization Platform},
+  author={ForgeAI Team},
+  year={2024},
+  url={https://github.com/Emran-goat/forgeai}
+}
+```
+
+## Acknowledgments
+
+- Built for the AMD Developer Hackathon ACT II, Track 3 (Unicorn)
+- Powered by [Fireworks AI](https://fireworks.ai/) for hosted inference on AMD MI300X
+- UI inspired by Japanese minimalist design (wabi-sabi aesthetic)
