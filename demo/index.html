@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ForgeAI — Motion Demo</title>
+  <style>
+    :root {
+      --ink: #0f0f0f;
+      --indigo: #1a1a2e;
+      --stone: #e8e4e1;
+      --white: #fafaf9;
+      --vermilion: #c0392b;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--white);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+    }
+    h1 {
+      font-weight: 200;
+      font-size: 3rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    h1 span { color: var(--vermilion); }
+    .subtitle {
+      font-weight: 300;
+      font-size: 1.1rem;
+      color: var(--indigo);
+      opacity: 0.6;
+      margin-bottom: 4rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 960px;
+      width: 100%;
+    }
+    .card {
+      border: 1px solid var(--stone);
+      border-radius: 12px;
+      padding: 2rem;
+      text-decoration: none;
+      color: var(--ink);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px;
+      height: 0;
+      background: var(--vermilion);
+      transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .card:hover {
+      border-color: var(--vermilion);
+      transform: translateY(-4px);
+    }
+    .card:hover::before {
+      height: 100%;
+    }
+    .card-num {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--vermilion);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .card h2 {
+      font-weight: 300;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .card p {
+      font-size: 0.875rem;
+      color: var(--indigo);
+      opacity: 0.5;
+      line-height: 1.5;
+    }
+    .footer {
+      margin-top: 4rem;
+      font-size: 0.75rem;
+      color: var(--indigo);
+      opacity: 0.3;
+      letter-spacing: 0.1em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Forge<span>AI</span></h1>
+  <p class="subtitle">Motion Design Demos</p>
+  <div class="grid">
+    <a href="01-hero.html" class="card">
+      <div class="card-num">01</div>
+      <h2>Hero Section</h2>
+      <p>Animated title reveal, breathing dot grid, CTA underline draw</p>
+    </a>
+    <a href="02-pipeline.html" class="card">
+      <div class="card-num">02</div>
+      <h2>Optimization Pipeline</h2>
+      <p>6-phase timeline with animated icons and staggered entrance</p>
+    </a>
+    <a href="03-architecture.html" class="card">
+      <div class="card-num">03</div>
+      <h2>System Architecture</h2>
+      <p>Component diagram with SVG line-draw and data flow pulses</p>
+    </a>
+    <a href="04-benchmarks.html" class="card">
+      <div class="card-num">04</div>
+      <h2>Benchmark Charts</h2>
+      <p>Animated bar charts and Pareto scatter plot with count-up</p>
+    </a>
+    <a href="05-upload-flow.html" class="card">
+      <div class="card-num">05</div>
+      <h2>Upload Flow</h2>
+      <p>3-step upload visualization with progress and detection</p>
+    </a>
+    <a href="06-results.html" class="card">
+      <div class="card-num">06</div>
+      <h2>Results Dashboard</h2>
+      <p>Stats counter, candidate table, interactive Pareto chart</p>
+    </a>
+    <a href="07-export.html" class="card">
+      <div class="card-num">07</div>
+      <h2>Export Flow</h2>
+      <p>Format selection, progress ring, download ready animation</p>
+    </a>
+    <a href="forgeai-demo.mp4" class="card" style="border-color: var(--vermilion);">
+      <div class="card-num">VIDEO</div>
+      <h2>Remotion Demo</h2>
+      <p>56-second 1920×1080 video — full pipeline walkthrough</p>
+    </a>
+  </div>
+  <p class="footer">FORGEAI — HARDWARE-AWARE AI OPTIMIZATION</p>
+</body>
+</html>

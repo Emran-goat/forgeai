@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeAI — Results</title>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --ink:#0f0f0f;
+    --indigo:#1a1a2e;
+    --stone:#e8e4e1;
+    --white:#fafaf9;
+    --vermilion:#c0392b;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+
+  html{scroll-behavior:smooth}
+
+  body{
+    font-family:system-ui,-apple-system,sans-serif;
+    background:var(--ink);
+    color:var(--white);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding-bottom:48px;
+  }
+
+  /* ── Dot Grid Background ── */
+  .dot-grid{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .dot-grid::before{
+    content:'';
+    position:absolute;
+    inset:-50%;
+    background-image:
+      radial-gradient(circle,rgba(232,228,225,0.5) 0.5px,transparent 0.5px);
+    background-size:32px 32px;
+    opacity:0.04;
+  }
+
+  /* ── Layout ── */
+  .container{
+    position:relative;
+    z-index:1;
+    max-width:900px;
+    margin:0 auto;
+    padding:5rem 2rem 4rem;
+  }
+
+  /* ── Header ── */
+  .header{
+    text-align:center;
+    margin-bottom:4rem;
+    opacity:0;
+    animation:snap-in 0.4s var(--ease) 0.0s forwards;
+  }
+
+  .header-title{
+    font-weight:200;
+    font-size:48px;
+    letter-spacing:-0.02em;
+    line-height:1;
+  }
+
+  .header-title .ai{color:var(--vermilion)}
+
+  .header-label{
+    margin-top:0.75rem;
+    font-size:14px;
+    letter-spacing:6px;
+    text-transform:uppercase;
+    color:var(--vermilion);
+    font-weight:300;
+  }
+
+  .header-sub{
+    margin-top:0.5rem;
+    font-size:13px;
+    color:rgba(232,228,225,0.5);
+    letter-spacing:0.04em;
+  }
+
+  @keyframes snap-in{
+    0%{opacity:0;transform:translateY(-8px)}
+    100%{opacity:1;transform:translateY(0)}
+  }
+
+  /* ── Stats Grid ── */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:1px;
+    background:rgba(232,228,225,0.06);
+    margin-bottom:4rem;
+  }
+
+  .stat-card{
+    background:var(--ink);
+    padding:32px 24px;
+    text-align:center;
+    border:1px solid rgba(232,228,225,0.1);
+    opacity:0;
+    transform:translateY(12px);
+  }
+
+  .stat-card:nth-child(1){animation:stat-in 0.5s var(--ease) 0.20s forwards}
+  .stat-card:nth-child(2){animation:stat-in 0.5s var(--ease) 0.35s forwards}
+  .stat-card:nth-child(3){animation:stat-in 0.5s var(--ease) 0.50s forwards}
+  .stat-card:nth-child(4){animation:stat-in 0.5s var(--ease) 0.65s forwards}
+
+  @keyframes stat-in{
+    0%{opacity:0;transform:translateY(12px)}
+    100%{opacity:1;transform:translateY(0)}
+  }
+
+  .stat-label{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    color:rgba(232,228,225,0.5);
+    font-weight:400;
+    margin-bottom:12px;
+  }
+
+  .stat-value{
+    font-weight:200;
+    font-size:48px;
+    color:var(--white);
+    line-height:1;
+    font-variant-numeric:tabular-nums;
+  }
+
+  .stat-unit{
+    font-size:20px;
+    font-weight:300;
+    color:rgba(232,228,225,0.4);
+    margin-left:4px;
+  }
+
+  /* ── Section Titles ── */
+  .section-title{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:3px;
+    color:rgba(232,228,225,0.5);
+    font-weight:400;
+    margin-bottom:1.5rem;
+    opacity:0;
+  }
+
+  .section-title.visible{animation:snap-in 0.4s var(--ease) forwards}
+
+  /* ── Candidate Table ── */
+  .table-section{margin-bottom:4rem}
+
+  .candidate-table{
+    width:100%;
+    border-collapse:collapse;
+  }
+
+  .candidate-table thead th{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    color:rgba(232,228,225,0.5);
+    font-weight:400;
+    text-align:left;
+    padding:12px 16px;
+    border-bottom:1px solid rgba(232,228,225,0.08);
+  }
+
+  .candidate-table tbody tr{
+    opacity:0;
+    transform:translateX(-16px);
+    transition:opacity 0.4s var(--ease), transform 0.4s var(--ease);
+  }
+
+  .candidate-table tbody tr.visible{
+    opacity:1;
+    transform:translateX(0);
+  }
+
+  .candidate-table tbody tr.pareto{
+    border-left:3px solid var(--vermilion);
+  }
+
+  .candidate-table tbody tr.pareto td{
+    color:var(--white);
+  }
+
+  .candidate-table tbody tr:not(.pareto) td{
+    color:#555;
+  }
+
+  .candidate-table tbody td{
+    font-size:15px;
+    font-weight:300;
+    padding:14px 16px;
+    border-bottom:1px solid rgba(232,228,225,0.04);
+  }
+
+  .pareto-badge{
+    display:inline-block;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:1px;
+    border:1px solid var(--vermilion);
+    color:var(--vermilion);
+    padding:2px 8px;
+    border-radius:2px;
+  }
+
+  /* ── Pareto Scatter Chart ── */
+  .chart-section{margin-bottom:4rem}
+
+  .chart-title-sub{
+    font-size:13px;
+    color:var(--vermilion);
+    font-weight:300;
+    margin-top:0.25rem;
+    margin-bottom:1.5rem;
+    opacity:0;
+  }
+
+  .chart-title-sub.visible{animation:snap-in 0.4s var(--ease) forwards}
+
+  .chart-wrap{
+    position:relative;
+    background:rgba(232,228,225,0.03);
+    border:1px solid rgba(232,228,225,0.06);
+    padding:24px;
+  }
+
+  .chart-svg{
+    width:100%;
+    height:auto;
+    display:block;
+  }
+
+  .dot{
+    opacity:0;
+    transform-origin:center;
+  }
+
+  .dot.bounce{
+    animation:dot-bounce 0.6s var(--ease) forwards;
+  }
+
+  @keyframes dot-bounce{
+    0%{opacity:0;transform:scale(0)}
+    60%{opacity:1;transform:scale(1.3)}
+    80%{transform:scale(0.9)}
+    100%{opacity:1;transform:scale(1)}
+  }
+
+  .frontier-line{
+    stroke-dasharray:1200;
+    stroke-dashoffset:1200;
+  }
+
+  .frontier-line.draw{
+    animation:line-draw 0.8s var(--ease) forwards;
+  }
+
+  @keyframes line-draw{
+    to{stroke-dashoffset:0}
+  }
+
+  .axis-label{
+    font-size:11px;
+    fill:rgba(232,228,225,0.35);
+    font-family:system-ui,-apple-system,sans-serif;
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+
+  .grid-line{
+    stroke:rgba(232,228,225,0.05);
+    stroke-width:1;
+  }
+
+  /* Tooltip */
+  .tooltip{
+    position:fixed;
+    pointer-events:none;
+    background:var(--indigo);
+    border:1px solid rgba(232,228,225,0.15);
+    padding:8px 14px;
+    border-radius:3px;
+    font-size:13px;
+    font-weight:300;
+    color:var(--stone);
+    opacity:0;
+    transition:opacity 0.15s ease;
+    z-index:100;
+    white-space:nowrap;
+  }
+
+  .tooltip.show{opacity:1}
+
+  /* ── Responsive ── */
+  @media(max-width:768px){
+    .container{padding:4rem 1.25rem 3rem}
+    .header-title{font-size:36px}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .stat-value{font-size:36px}
+    .candidate-table{font-size:13px}
+  }
+
+  /* ── Navigation ── */
+  .demo-nav{
+    position:fixed;bottom:0;left:0;right:0;
+    height:48px;
+    background:rgba(15,15,15,0.9);
+    backdrop-filter:blur(12px);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;
+    z-index:9999;
+    font:11px/1 system-ui,sans-serif;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--stone);
+  }
+  .demo-nav a{color:inherit;text-decoration:none;transition:color 0.2s ease}
+  .demo-nav a:hover{color:var(--vermilion)}
+  .demo-nav .nav-prev{min-width:80px}
+  .demo-nav .nav-center{text-align:center;flex:1}
+  .demo-nav .nav-next{min-width:80px;text-align:right}
+  .demo-nav .nav-dots{display:flex;gap:6px;align-items:center;min-width:80px;justify-content:flex-end}
+  .demo-nav .nav-dot{width:6px;height:6px;border-radius:50%;background:rgba(232,228,225,0.3);display:inline-block}
+  .demo-nav .nav-dot.active{background:var(--vermilion)}
+  .demo-nav .nav-spacer{min-width:80px}
+  .demo-index-link{
+    position:fixed;top:16px;right:24px;z-index:9999;
+    font:11px/1 system-ui,sans-serif;
+    letter-spacing:0.1em;text-transform:uppercase;
+    color:var(--stone);text-decoration:none;
+    transition:color 0.2s ease;
+  }
+  .demo-index-link:hover{color:var(--vermilion)}
+</style>
+</head>
+<body>
+
+<div class="dot-grid"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">FORGE<span class="ai">AI</span></div>
+    <div class="header-label">RESULTS</div>
+    <div class="header-sub">MI300X &middot; DINOv2-B/14</div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Latency</div>
+      <div class="stat-value"><span data-target="1.8" data-decimals="1">0</span><span class="stat-unit">ms</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Throughput</div>
+      <div class="stat-value"><span data-target="2847" data-decimals="0">0</span><span class="stat-unit">tok/s</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Accuracy</div>
+      <div class="stat-value"><span data-target="89.3" data-decimals="1">0</span><span class="stat-unit">%</span></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Model Size</div>
+      <div class="stat-value"><span data-target="42" data-decimals="0">0</span><span class="stat-unit">MB</span></div>
+    </div>
+  </div>
+
+  <!-- Candidate Table -->
+  <div class="table-section">
+    <div class="section-title" id="table-title">CANDIDATE COMPARISON</div>
+    <table class="candidate-table">
+      <thead>
+        <tr>
+          <th>Candidate</th>
+          <th>Strategy</th>
+          <th>Latency</th>
+          <th>Accuracy</th>
+          <th>Size</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="candidate-tbody">
+        <tr class="pareto" data-delay="0">
+          <td>C-001</td>
+          <td>Prune 40% + INT8</td>
+          <td>1.8 ms</td>
+          <td>89.3%</td>
+          <td>42 MB</td>
+          <td><span class="pareto-badge">Pareto</span></td>
+        </tr>
+        <tr class="pareto" data-delay="80">
+          <td>C-003</td>
+          <td>Distill + Prune 30%</td>
+          <td>2.1 ms</td>
+          <td>91.2%</td>
+          <td>58 MB</td>
+          <td><span class="pareto-badge">Pareto</span></td>
+        </tr>
+        <tr data-delay="160">
+          <td>C-002</td>
+          <td>INT4 Quantization</td>
+          <td>1.4 ms</td>
+          <td>84.7%</td>
+          <td>28 MB</td>
+          <td>—</td>
+        </tr>
+        <tr class="pareto" data-delay="240">
+          <td>C-005</td>
+          <td>Full Precision Baseline</td>
+          <td>4.2 ms</td>
+          <td>93.8%</td>
+          <td>340 MB</td>
+          <td><span class="pareto-badge">Pareto</span></td>
+        </tr>
+        <tr data-delay="320">
+          <td>C-004</td>
+          <td>Prune 60% + FP16</td>
+          <td>1.6 ms</td>
+          <td>82.1%</td>
+          <td>35 MB</td>
+          <td>—</td>
+        </tr>
+        <tr data-delay="400">
+          <td>C-006</td>
+          <td>Distill + INT8</td>
+          <td>2.0 ms</td>
+          <td>88.5%</td>
+          <td>46 MB</td>
+          <td>—</td>
+        </tr>
+        <tr data-delay="480">
+          <td>C-007</td>
+          <td>Structured Prune 50%</td>
+          <td>2.4 ms</td>
+          <td>86.9%</td>
+          <td>52 MB</td>
+          <td>—</td>
+        </tr>
+        <tr class="pareto" data-delay="560">
+          <td>C-008</td>
+          <td>Prune 20% + INT8 + Distill</td>
+          <td>2.6 ms</td>
+          <td>92.4%</td>
+          <td>64 MB</td>
+          <td><span class="pareto-badge">Pareto</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pareto Scatter Chart -->
+  <div class="chart-section">
+    <div class="section-title" id="chart-title">PARETO FRONTIER</div>
+    <div class="chart-title-sub" id="chart-sub">Latency vs Accuracy</div>
+    <div class="chart-wrap">
+      <svg class="chart-svg" viewBox="0 0 700 400" xmlns="http://www.w3.org/2000/svg">
+        <!-- Grid lines -->
+        <line class="grid-line" x1="80" y1="40" x2="80" y2="340"/>
+        <line class="grid-line" x1="80" y1="340" x2="660" y2="340"/>
+        <line class="grid-line" x1="80" y1="265" x2="660" y2="265" stroke-dasharray="4,4"/>
+        <line class="grid-line" x1="80" y1="190" x2="660" y2="190" stroke-dasharray="4,4"/>
+        <line class="grid-line" x1="80" y1="115" x2="660" y2="115" stroke-dasharray="4,4"/>
+        <line class="grid-line" x1="80" y1="40" x2="660" y2="40" stroke-dasharray="4,4"/>
+
+        <!-- Axis labels -->
+        <text class="axis-label" x="370" y="385" text-anchor="middle">LATENCY (ms)</text>
+        <text class="axis-label" x="20" y="190" text-anchor="middle" transform="rotate(-90,20,190)">ACCURACY (%)</text>
+
+        <!-- Y-axis ticks -->
+        <text class="axis-label" x="72" y="344" text-anchor="end">80</text>
+        <text class="axis-label" x="72" y="269" text-anchor="end">85</text>
+        <text class="axis-label" x="72" y="194" text-anchor="end">90</text>
+        <text class="axis-label" x="72" y="119" text-anchor="end">95</text>
+
+        <!-- X-axis ticks -->
+        <text class="axis-label" x="80" y="358" text-anchor="middle">1.0</text>
+        <text class="axis-label" x="225" y="358" text-anchor="middle">2.0</text>
+        <text class="axis-label" x="370" y="358" text-anchor="middle">3.0</text>
+        <text class="axis-label" x="515" y="358" text-anchor="middle">4.0</text>
+        <text class="axis-label" x="660" y="358" text-anchor="middle">5.0</text>
+
+        <!-- Frontier line (connects pareto-optimal points) -->
+        <polyline class="frontier-line" fill="none" stroke="#c0392b" stroke-width="2"
+          points="137,130 181,110 270,76 342,52 515,18"/>
+
+        <!-- Data dots — non-optimal (indigo) -->
+        <circle class="dot" cx="108" cy="193" r="8" fill="#1a1a2e" data-label="C-002 · 1.4ms · 84.7%" data-delay="1800"/>
+        <circle class="dot" cx="122" cy="164" r="8" fill="#1a1a2e" data-label="C-004 · 1.6ms · 82.1%" data-delay="1850"/>
+        <circle class="dot" cx="167" cy="124" r="8" fill="#1a1a2e" data-label="C-006 · 2.0ms · 88.5%" data-delay="1900"/>
+        <circle class="dot" cx="211" cy="143" r="8" fill="#1a1a2e" data-label="C-007 · 2.4ms · 86.9%" data-delay="1950"/>
+
+        <!-- Data dots — pareto-optimal (vermilion) -->
+        <circle class="dot" cx="137" cy="130" r="8" fill="#c0392b" data-label="C-001 · 1.8ms · 89.3%" data-delay="1800"/>
+        <circle class="dot" cx="181" cy="110" r="8" fill="#c0392b" data-label="C-003 · 2.1ms · 91.2%" data-delay="1850"/>
+        <circle class="dot" cx="270" cy="76" r="8" fill="#c0392b" data-label="C-008 · 2.6ms · 92.4%" data-delay="1900"/>
+        <circle class="dot" cx="515" cy="18" r="8" fill="#c0392b" data-label="C-005 · 4.2ms · 93.8%" data-delay="1950"/>
+      </svg>
+    </div>
+  </div>
+
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip"></div>
+
+<a href="index.html" class="demo-index-link">Index</a>
+
+<nav class="demo-nav">
+  <div class="nav-prev"><a href="05-upload-flow.html">← Prev</a></div>
+  <div class="nav-center">06/07 · Results</div>
+  <div class="nav-next"><a href="07-export.html">Next →</a></div>
+  <div class="nav-dots">
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot active"></span>
+    <span class="nav-dot"></span>
+  </div>
+</nav>
+
+<script>
+(function(){
+  var ease = 'cubic-bezier(0.16,1,0.3,1)';
+
+  // ── Count-up animation ──
+  function countUp(el, target, decimals, duration){
+    var start = performance.now();
+    var from = 0;
+    function tick(now){
+      var t = Math.min((now - start) / duration, 1);
+      var eased = 1 - Math.pow(1 - t, 3);
+      var val = from + (target - from) * eased;
+      el.textContent = decimals > 0 ? val.toFixed(decimals) : Math.round(val);
+      if(t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // Start count-ups after stat cards appear
+  var statSpans = document.querySelectorAll('[data-target]');
+  statSpans.forEach(function(span){
+    var target = parseFloat(span.dataset.target);
+    var decimals = parseInt(span.dataset.decimals) || 0;
+    setTimeout(function(){
+      countUp(span, target, decimals, 1200);
+    }, 700);
+  });
+
+  // ── Table title + rows ──
+  setTimeout(function(){
+    document.getElementById('table-title').classList.add('visible');
+  }, 800);
+
+  var rows = document.querySelectorAll('#candidate-tbody tr');
+  rows.forEach(function(row){
+    var delay = parseInt(row.dataset.delay) || 0;
+    setTimeout(function(){
+      row.classList.add('visible');
+    }, 1000 + delay);
+  });
+
+  // ── Chart title + subtitle ──
+  setTimeout(function(){
+    document.getElementById('chart-title').classList.add('visible');
+  }, 1500);
+
+  setTimeout(function(){
+    document.getElementById('chart-sub').classList.add('visible');
+  }, 1600);
+
+  // ── Dots bounce in ──
+  var dots = document.querySelectorAll('.dot');
+  dots.forEach(function(dot){
+    var delay = parseInt(dot.dataset.delay) || 1800;
+    setTimeout(function(){
+      dot.classList.add('bounce');
+    }, delay);
+  });
+
+  // ── Frontier line draws ──
+  setTimeout(function(){
+    document.querySelector('.frontier-line').classList.add('draw');
+  }, 2200);
+
+  // ── Tooltip ──
+  var tooltip = document.getElementById('tooltip');
+  dots.forEach(function(dot){
+    dot.addEventListener('mouseenter', function(e){
+      tooltip.textContent = dot.dataset.label;
+      tooltip.classList.add('show');
+    });
+    dot.addEventListener('mousemove', function(e){
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top = (e.clientY - 10) + 'px';
+    });
+    dot.addEventListener('mouseleave', function(){
+      tooltip.classList.remove('show');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

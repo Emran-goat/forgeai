@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ForgeAI — The Compiler for Efficient AI Models</title>
+<style>
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+  :root{
+    --ink:#0f0f0f;
+    --indigo:#1a1a2e;
+    --stone:#e8e4e1;
+    --white:#fafaf9;
+    --vermilion:#c0392b;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+  }
+
+  @font-face{
+    font-family:'Forge Display';
+    src:local('Georgia'),local('Times New Roman');
+    font-weight:200;
+    font-style:normal;
+  }
+
+  html{scroll-behavior:smooth}
+
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+    background:var(--white);
+    color:var(--ink);
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  /* ── Hero Section ── */
+  .hero{
+    position:relative;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:4rem 2rem;
+    overflow:hidden;
+  }
+
+  /* ── Dot Grid Background ── */
+  .dot-grid{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .dot-grid::before{
+    content:'';
+    position:absolute;
+    inset:-50%;
+    background-image:
+      radial-gradient(circle,var(--ink) 0.6px,transparent 0.6px);
+    background-size:32px 32px;
+    opacity:0;
+    animation:dot-breathe 4s var(--ease) infinite alternate;
+  }
+
+  .dot-grid::after{
+    content:'';
+    position:absolute;
+    inset:0;
+    background:radial-gradient(ellipse 60% 50% at 50% 50%,transparent 0%,var(--white) 70%);
+    pointer-events:none;
+  }
+
+  @keyframes dot-breathe{
+    0%{opacity:0.03;transform:scale(1)}
+    100%{opacity:0.07;transform:scale(1.02)}
+  }
+
+  /* ── Chip / Processor Icon ── */
+  .chip{
+    position:relative;
+    width:56px;
+    height:56px;
+    margin-bottom:3rem;
+    opacity:0;
+    animation:chip-enter 0.6s var(--ease) 0.2s forwards;
+  }
+
+  .chip-core{
+    position:absolute;
+    top:50%;left:50%;
+    width:24px;height:24px;
+    transform:translate(-50%,-50%) rotate(45deg);
+    border:1.5px solid var(--ink);
+    border-radius:3px;
+  }
+
+  .chip-core::before{
+    content:'';
+    position:absolute;
+    inset:4px;
+    border:1px solid var(--vermilion);
+    border-radius:2px;
+  }
+
+  /* Chip pins */
+  .chip-pin{
+    position:absolute;
+    background:var(--ink);
+    opacity:0.5;
+  }
+  /* Top pins */
+  .chip-pin:nth-child(2){width:1.5px;height:8px;top:-8px;left:14px}
+  .chip-pin:nth-child(3){width:1.5px;height:8px;top:-8px;left:24px}
+  .chip-pin:nth-child(4){width:1.5px;height:8px;top:-8px;left:34px}
+  .chip-pin:nth-child(5){width:1.5px;height:8px;top:-8px;left:44px}
+  /* Bottom pins */
+  .chip-pin:nth-child(6){width:1.5px;height:8px;bottom:-8px;left:14px}
+  .chip-pin:nth-child(7){width:1.5px;height:8px;bottom:-8px;left:24px}
+  .chip-pin:nth-child(8){width:1.5px;height:8px;bottom:-8px;left:34px}
+  .chip-pin:nth-child(9){width:1.5px;height:8px;bottom:-8px;left:44px}
+  /* Left pins */
+  .chip-pin:nth-child(10){width:8px;height:1.5px;left:-8px;top:14px}
+  .chip-pin:nth-child(11){width:8px;height:1.5px;left:-8px;top:24px}
+  .chip-pin:nth-child(12){width:8px;height:1.5px;left:-8px;top:34px}
+  .chip-pin:nth-child(13){width:8px;height:1.5px;left:-8px;top:44px}
+  /* Right pins */
+  .chip-pin:nth-child(14){width:8px;height:1.5px;right:-8px;top:14px}
+  .chip-pin:nth-child(15){width:8px;height:1.5px;right:-8px;top:24px}
+  .chip-pin:nth-child(16){width:8px;height:1.5px;right:-8px;top:34px}
+  .chip-pin:nth-child(17){width:8px;height:1.5px;right:-8px;top:44px}
+
+  @keyframes chip-enter{
+    from{opacity:0;transform:scale(0.8) rotate(-10deg)}
+    to{opacity:1;transform:scale(1) rotate(0deg)}
+  }
+
+  /* ── Title: Character-by-character reveal ── */
+  .title{
+    font-family:'Georgia','Forge Display',serif;
+    font-weight:200;
+    font-size:clamp(3.5rem,10vw,8rem);
+    letter-spacing:-0.03em;
+    line-height:1;
+    text-align:center;
+    position:relative;
+    z-index:1;
+  }
+
+  .title span{
+    display:inline-block;
+    opacity:0;
+    transform:translateY(40px);
+    animation:letter-reveal 0.8s var(--ease) forwards;
+  }
+
+  /* Stagger each letter: F(0.3) o(0.38) r(0.46) g(0.54) e(0.62) A(0.76) I(0.84) */
+  .title span:nth-child(1){animation-delay:0.30s}
+  .title span:nth-child(2){animation-delay:0.38s}
+  .title span:nth-child(3){animation-delay:0.46s}
+  .title span:nth-child(4){animation-delay:0.54s}
+  .title span:nth-child(5){animation-delay:0.62s}
+  .title span:nth-child(6){animation-delay:0.76s}
+  .title span:nth-child(7){animation-delay:0.84s}
+
+  @keyframes letter-reveal{
+    0%{opacity:0;transform:translateY(40px) rotateX(-40deg)}
+    100%{opacity:1;transform:translateY(0) rotateX(0)}
+  }
+
+  /* ── Subtitle ── */
+  .subtitle{
+    font-weight:300;
+    font-size:clamp(1rem,2.5vw,1.5rem);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--indigo);
+    margin-top:2.5rem;
+    text-align:center;
+    position:relative;
+    z-index:1;
+    opacity:0;
+    transform:translateY(16px);
+    animation:fade-up 0.6s var(--ease) 1.1s forwards;
+  }
+
+  /* ── Tagline ── */
+  .tagline{
+    font-weight:200;
+    font-size:clamp(0.875rem,1.8vw,1.125rem);
+    color:var(--stone);
+    background:var(--ink);
+    padding:0.5rem 1.5rem;
+    border-radius:100px;
+    margin-top:1.5rem;
+    letter-spacing:0.04em;
+    position:relative;
+    z-index:1;
+    opacity:0;
+    transform:translateY(12px);
+    animation:fade-up 0.6s var(--ease) 1.4s forwards;
+  }
+
+  @keyframes fade-up{
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  /* ── CTA Button ── */
+  .cta-wrapper{
+    margin-top:3.5rem;
+    position:relative;
+    z-index:1;
+    opacity:0;
+    animation:fade-up 0.5s var(--ease) 1.8s forwards;
+  }
+
+  .cta{
+    position:relative;
+    display:inline-flex;
+    align-items:center;
+    gap:0.75rem;
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:1rem 2.5rem;
+    font-family:inherit;
+    font-weight:300;
+    font-size:1rem;
+    letter-spacing:0.06em;
+    color:var(--ink);
+    transition:color 0.4s var(--ease);
+  }
+
+  .cta:hover{color:var(--vermilion)}
+
+  .cta-text{position:relative;z-index:1}
+
+  .cta-arrow{
+    display:inline-block;
+    transition:transform 0.4s var(--ease);
+  }
+
+  .cta:hover .cta-arrow{transform:translateX(4px)}
+
+  /* Underline draw animation */
+  .cta-underline{
+    position:absolute;
+    bottom:0;left:0;right:0;
+    height:1.5px;
+    overflow:visible;
+  }
+
+  .cta-underline svg{
+    width:100%;
+    height:4px;
+    position:relative;
+    top:-1px;
+  }
+
+  .cta-underline svg line{
+    stroke:var(--vermilion);
+    stroke-width:1.5;
+    stroke-dasharray:1000;
+    stroke-dashoffset:1000;
+    animation:underline-draw 1s var(--ease) 2s forwards;
+  }
+
+  @keyframes underline-draw{
+    to{stroke-dashoffset:0}
+  }
+
+  /* Button hover glow */
+  .cta::before{
+    content:'';
+    position:absolute;
+    inset:-4px;
+    border-radius:100px;
+    background:var(--vermilion);
+    opacity:0;
+    transition:opacity 0.4s var(--ease);
+    z-index:-1;
+  }
+
+  .cta:hover::before{opacity:0.06}
+
+  /* ── Vertical accent line (wabi-sabi imperfection) ── */
+  .accent-line{
+    position:absolute;
+    left:10%;
+    top:15%;
+    width:1px;
+    height:0;
+    background:linear-gradient(to bottom,transparent,var(--ink) 20%,var(--ink) 80%,transparent);
+    opacity:0.08;
+    animation:line-grow 2s var(--ease) 0.5s forwards;
+    z-index:0;
+  }
+
+  @keyframes line-grow{
+    to{height:70%}
+  }
+
+  /* ── Horizontal accent ── */
+  .accent-h{
+    position:absolute;
+    right:8%;
+    bottom:20%;
+    height:1px;
+    width:0;
+    background:linear-gradient(to right,transparent,var(--vermilion) 30%,var(--vermilion) 70%,transparent);
+    opacity:0.15;
+    animation:line-grow-h 2s var(--ease) 0.8s forwards;
+    z-index:0;
+  }
+
+  @keyframes line-grow-h{
+    to{width:120px}
+  }
+
+  /* ── Ma (negative space) breathing circle ── */
+  .ma-circle{
+    position:absolute;
+    width:300px;height:300px;
+    border-radius:50%;
+    border:1px solid var(--ink);
+    opacity:0;
+    top:50%;left:50%;
+    transform:translate(-50%,-50%) scale(0.9);
+    animation:ma-breathe 3s var(--ease) 1s forwards;
+    z-index:0;
+    pointer-events:none;
+  }
+
+  .ma-circle::before{
+    content:'';
+    position:absolute;
+    inset:30px;
+    border-radius:50%;
+    border:0.5px solid var(--vermilion);
+    opacity:0.3;
+  }
+
+  @keyframes ma-breathe{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(0.9)}
+    50%{opacity:0.04}
+    100%{opacity:0.03;transform:translate(-50%,-50%) scale(1)}
+  }
+
+  /* ── Scroll indicator ── */
+  .scroll-hint{
+    position:absolute;
+    bottom:2.5rem;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:0.5rem;
+    opacity:0;
+    animation:fade-up 0.6s var(--ease) 2.3s forwards;
+    z-index:1;
+  }
+
+  .scroll-hint span{
+    font-size:0.625rem;
+    letter-spacing:0.2em;
+    text-transform:uppercase;
+    color:var(--ink);
+    opacity:0.25;
+    font-weight:300;
+  }
+
+  .scroll-line{
+    width:1px;height:32px;
+    background:var(--ink);
+    opacity:0.15;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .scroll-line::after{
+    content:'';
+    position:absolute;
+    top:-100%;left:0;
+    width:100%;height:100%;
+    background:var(--vermilion);
+    animation:scroll-pulse 2s ease-in-out infinite 2.5s;
+  }
+
+  @keyframes scroll-pulse{
+    0%{top:-100%}
+    50%{top:100%}
+    100%{top:100%}
+  }
+
+  /* ── Responsive ── */
+  @media(max-width:768px){
+    .hero{padding:3rem 1.5rem}
+    .chip{width:40px;height:40px;margin-bottom:2rem}
+    .chip-core{width:18px;height:18px}
+    .chip-core::before{inset:3px}
+    .chip-pin:nth-child(2),.chip-pin:nth-child(3),.chip-pin:nth-child(4),.chip-pin:nth-child(5),
+    .chip-pin:nth-child(6),.chip-pin:nth-child(7),.chip-pin:nth-child(8),.chip-pin:nth-child(9){
+      display:none;
+    }
+    .ma-circle{width:200px;height:200px}
+    .accent-line,.accent-h{display:none}
+  }
+
+  /* ── Demo Navigation Bar ── */
+  .demo-nav{
+    position:fixed;bottom:0;left:0;right:0;
+    height:48px;
+    background:rgba(15,15,15,0.85);
+    backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:space-between;
+    padding:0 24px;
+    z-index:9999;
+    font:11px/1 system-ui,sans-serif;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--stone);
+  }
+  .demo-nav a{color:inherit;text-decoration:none;transition:color 0.2s ease}
+  .demo-nav a:hover{color:var(--vermilion)}
+  .demo-nav .nav-prev{min-width:80px}
+  .demo-nav .nav-center{text-align:center;flex:1}
+  .demo-nav .nav-next{min-width:80px;text-align:right}
+  .demo-nav .nav-dots{display:flex;gap:6px;align-items:center;min-width:80px;justify-content:flex-end}
+  .demo-nav .nav-dot{width:6px;height:6px;border-radius:50%;background:rgba(232,228,225,0.3);display:inline-block}
+  .demo-nav .nav-dot.active{background:var(--vermilion)}
+  .demo-nav .nav-spacer{min-width:80px}
+  .demo-index-link{
+    position:fixed;top:16px;right:24px;z-index:9999;
+    font:11px/1 system-ui,sans-serif;
+    letter-spacing:0.1em;text-transform:uppercase;
+    color:var(--stone);text-decoration:none;
+    transition:color 0.2s ease;
+  }
+  .demo-index-link:hover{color:var(--vermilion)}
+</style>
+</head>
+<body>
+
+<section class="hero">
+
+  <!-- Dot grid background -->
+  <div class="dot-grid"></div>
+
+  <!-- Wabi-sabi accent lines -->
+  <div class="accent-line"></div>
+  <div class="accent-h"></div>
+
+  <!-- Ma breathing circle -->
+  <div class="ma-circle"></div>
+
+  <!-- Chip icon -->
+  <div class="chip">
+    <div class="chip-core"></div>
+    <div class="chip-pin"></div><div class="chip-pin"></div>
+    <div class="chip-pin"></div><div class="chip-pin"></div>
+    <div class="chip-pin"></div><div class="chip-pin"></div>
+    <div class="chip-pin"></div><div class="chip-pin"></div>
+    <div class="chip-pin"></div><div class="chip-pin"></div>
+    <div class="chip-pin"></div><div class="chip-pin"></div>
+    <div class="chip-pin"></div><div class="chip-pin"></div>
+    <div class="chip-pin"></div><div class="chip-pin"></div>
+  </div>
+
+  <!-- Title -->
+  <h1 class="title">
+    <span>F</span><span>o</span><span>r</span><span>g</span><span>e</span><span>A</span><span>I</span>
+  </h1>
+
+  <!-- Subtitle -->
+  <p class="subtitle">The compiler for efficient AI models.</p>
+
+  <!-- Tagline -->
+  <p class="tagline">Hardware-aware optimization for AMD MI300X</p>
+
+  <!-- CTA -->
+  <div class="cta-wrapper">
+    <button class="cta">
+      <span class="cta-text">Begin optimization</span>
+      <span class="cta-arrow">&#8594;</span>
+      <span class="cta-underline">
+        <svg viewBox="0 0 100 4" preserveAspectRatio="none">
+          <line x1="0" y1="2" x2="100" y2="2" />
+        </svg>
+      </span>
+    </button>
+  </div>
+
+  <!-- Scroll hint -->
+  <div class="scroll-hint">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+
+</section>
+
+<a href="index.html" class="demo-index-link">Index</a>
+
+<nav class="demo-nav">
+  <span class="nav-spacer"></span>
+  <div class="nav-center">01/07 · Hero Section</div>
+  <div class="nav-next"><a href="02-pipeline.html">Next →</a></div>
+  <div class="nav-dots">
+    <span class="nav-dot active"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+    <span class="nav-dot"></span>
+  </div>
+</nav>
+
+</body>
+</html>
