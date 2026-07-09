@@ -9,6 +9,8 @@ Hardware-aware AI model optimization for AMD GPUs. Upload a PyTorch checkpoint, 
 
 Built for [AMD Developer Hackathon ACT II, Track 3](https://github.com/Emran-goat/forgeai).
 
+**Live demo:** https://forgeai-fbda.onrender.com/
+
 ## Install
 
 ```bash
