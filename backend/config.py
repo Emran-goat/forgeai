@@ -14,8 +14,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
-    data_dir: Path = Path("data")
-    db_path: Path = Path("data/forgeai.db")
+    data_dir: Path = Path("/tmp/data")
+    db_path: Path = Path("/tmp/data/forgeai.db")
     rocm_visible_devices: str = "0"
     host: str = "0.0.0.0"
     port: int = 8000
