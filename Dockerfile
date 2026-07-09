@@ -28,19 +28,30 @@ COPY --from=frontend-build /app/frontend/public ./frontend/public
 
 RUN mkdir -p /tmp/data && chmod 777 /tmp/data
 
-# Create a startup script
+# ponytail: one sh script, no process manager. uvicorn = backend (internal 8000),
+# node = front-facing on Render's $PORT. node is foreground so Render's port scan
+# sees it; uvicorn dies -> container exits -> Render restarts.
 RUN printf '#!/bin/sh\n\
-node /app/frontend/server.js &\n\
-exec uvicorn backend.main:app --host 0.0.0.0 --port 8000\n' > /start.sh && chmod +x /start.sh
+set -e\n\
+uvicorn backend.main:app --host 127.0.0.1 --port 8000 &\n\
+UVICORN_PID=$!\n\
+node /app/frontend/server.js\n\
+EXIT=$?\n\
+kill $UVICORN_PID 2>/dev/null || true\n\
+exit $EXIT\n' > /start.sh && chmod +x /start.sh
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
-ENV HOST=0.0.0.0
-ENV PORT=8000
+# node standalone server.js reads HOSTNAME (not HOST); bind all interfaces so Render can scan it.
+ENV HOSTNAME=0.0.0.0
+# Render injects PORT=10000 at runtime. Do NOT override PORT here — Next.js must bind Render's $PORT.
+ENV UVICORN_HOST=127.0.0.1
+ENV UVICORN_PORT=8000
 
-EXPOSE 8000 3000
+EXPOSE 8000
 
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD curl -f http://localhost:8000/health || exit 1
+# Render ignores HEALTHCHECK on free tier, but keep a probe on the front-facing port ($PORT).
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=15s \
+  CMD curl -f "http://127.0.0.1:${PORT:-10000}/" || exit 1
 
 CMD ["/start.sh"]
