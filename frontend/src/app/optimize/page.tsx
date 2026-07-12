@@ -20,6 +20,11 @@ interface Constraints {
   min_accuracy: number;
 }
 
+interface Hyperparams {
+  n_trials: number;
+  timeout_seconds: number;
+}
+
 function OptimizePageInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -30,6 +35,10 @@ function OptimizePageInner() {
     max_latency_ms: 50,
     max_memory_mb: 4096,
     min_accuracy: 95,
+  });
+  const [hyperparams, setHyperparams] = useState<Hyperparams>({
+    n_trials: 50,
+    timeout_seconds: 3600,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +51,7 @@ function OptimizePageInner() {
     setLoading(true);
     setError(null);
     try {
-      const optimization = await createOptimization(modelId, selectedHardware, constraints);
+      const optimization = await createOptimization(modelId, selectedHardware, constraints, hyperparams);
       router.push(`/results?optimizationId=${optimization.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start optimization");
@@ -191,6 +200,92 @@ function OptimizePageInner() {
                 value={constraints.min_accuracy}
                 onChange={(e) =>
                   setConstraints({ ...constraints, min_accuracy: Number(e.target.value) })
+                }
+                className="w-full h-px bg-[#e8e4e1] appearance-none cursor-pointer
+                  [&::-webkit-slider-thumb]:appearance-none
+                  [&::-webkit-slider-thumb]:w-3
+                  [&::-webkit-slider-thumb]:h-3
+                  [&::-webkit-slider-thumb]:rounded-full
+                  [&::-webkit-slider-thumb]:bg-[#0f0f0f]
+                  [&::-webkit-slider-thumb]:border-0
+                  [&::-webkit-slider-thumb]:cursor-pointer
+                  [&::-webkit-slider-thumb]:transition-transform
+                  [&::-webkit-slider-thumb]:duration-200
+                  [&::-webkit-slider-thumb]:hover:scale-150
+                  [&::-moz-range-thumb]:w-3
+                  [&::-moz-range-thumb]:h-3
+                  [&::-moz-range-thumb]:rounded-full
+                  [&::-moz-range-thumb]:bg-[#0f0f0f]
+                  [&::-moz-range-thumb]:border-0
+                  [&::-moz-range-thumb]:cursor-pointer"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <label className="text-xs uppercase tracking-widest text-[#1a1a2e]/40 block">
+            Hyperparameter Tuning
+          </label>
+
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm text-[#0f0f0f]">
+                  <Target className="w-3.5 h-3.5 text-[#1a1a2e]/30" strokeWidth={1.5} />
+                  Number of Trials
+                </label>
+                <span className="text-xs text-[#1a1a2e]/40 tabular-nums">
+                  {hyperparams.n_trials}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="10"
+                max="200"
+                step="10"
+                value={hyperparams.n_trials}
+                onChange={(e) =>
+                  setHyperparams({ ...hyperparams, n_trials: Number(e.target.value) })
+                }
+                className="w-full h-px bg-[#e8e4e1] appearance-none cursor-pointer
+                  [&::-webkit-slider-thumb]:appearance-none
+                  [&::-webkit-slider-thumb]:w-3
+                  [&::-webkit-slider-thumb]:h-3
+                  [&::-webkit-slider-thumb]:rounded-full
+                  [&::-webkit-slider-thumb]:bg-[#0f0f0f]
+                  [&::-webkit-slider-thumb]:border-0
+                  [&::-webkit-slider-thumb]:cursor-pointer
+                  [&::-webkit-slider-thumb]:transition-transform
+                  [&::-webkit-slider-thumb]:duration-200
+                  [&::-webkit-slider-thumb]:hover:scale-150
+                  [&::-moz-range-thumb]:w-3
+                  [&::-moz-range-thumb]:h-3
+                  [&::-moz-range-thumb]:rounded-full
+                  [&::-moz-range-thumb]:bg-[#0f0f0f]
+                  [&::-moz-range-thumb]:border-0
+                  [&::-moz-range-thumb]:cursor-pointer"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-sm text-[#0f0f0f]">
+                  <Target className="w-3.5 h-3.5 text-[#1a1a2e]/30" strokeWidth={1.5} />
+                  Timeout
+                </label>
+                <span className="text-xs text-[#1a1a2e]/40 tabular-nums">
+                  {Math.floor(hyperparams.timeout_seconds / 60)}m
+                </span>
+              </div>
+              <input
+                type="range"
+                min="600"
+                max="7200"
+                step="300"
+                value={hyperparams.timeout_seconds}
+                onChange={(e) =>
+                  setHyperparams({ ...hyperparams, timeout_seconds: Number(e.target.value) })
                 }
                 className="w-full h-px bg-[#e8e4e1] appearance-none cursor-pointer
                   [&::-webkit-slider-thumb]:appearance-none

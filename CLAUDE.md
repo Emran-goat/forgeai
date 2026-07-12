@@ -7,9 +7,11 @@
 ## Current State
 - **Phase:** 5 (Polish & Demo) — In Progress
 - **Day:** 1
-- **Status:** Phases 1-4 complete. Remotion video rendered (56s, 3.3 MB). README written. Demo index updated. GitHub pushed.
-- **Build:** 7 routes compile clean (8 static pages + 7 demo HTML + 1 Remotion video)
+- **Status:** GitHub pushed with professional repo (LICENSE, CONTRIBUTING, CODE_OF_CONDUCT, SECURITY, README badges, docs/, tests/, examples/). Deployed to Render at https://forgeai-fbda.onrender.com/ (Next.js on $PORT, uvicorn on 127.0.0.1:8000).
+- **Build:** 7 routes compile clean (8 static pages + 7 demo HTML)
 - **GitHub:** https://github.com/Emran-goat/forgeai
+- **Demo URL:** https://forgeai-fbda.onrender.com/
+- **Note:** User decided NOT to use the Remotion video for submission. Slides to be created tomorrow.
 
 ## Architecture Decisions
 | Decision | Choice | ADR |
@@ -45,7 +47,7 @@
 - Pydantic v2 for all schemas
 
 ## Current Task
-Phase 5 in progress. GitHub pushed. Next: Deploy to HuggingFace Spaces, create slides, cover image, submit to lablab.ai.
+Phase 5 in progress. Deployment and GitHub done. Tomorrow: Create slide deck, submit to lablab.ai. User decided NOT to use the Remotion video.
 
 ## Core Engine Status
 | Module | Status | Key Classes |
@@ -57,13 +59,14 @@ Phase 5 in progress. GitHub pushed. Next: Deploy to HuggingFace Spaces, create s
 | `benchmark.py` | Complete | `GPUBenchmark`, `BenchmarkConfig`, `BenchmarkResult` |
 | `pareto.py` | Complete | `compute_pareto_frontier()`, `ParetoResult`, `select_knee_point()` |
 | `optimizer.py` | Complete | `OptimizationOrchestrator`, `OptimizationPhase`, progress callbacks |
+| `hyperparameter.py` | Complete | `HyperparameterTuner`, `HyperparameterConfig`, `TuningResult` |
 | `export.py` | Complete | `export_to_onnx()`, `export_to_torchscript()`, `ExportResult` |
 
 ## API Routes Status
 | Route | Status | Key Endpoints |
 |-------|--------|---------------|
 | `api/models.py` | Complete | POST/GET/DELETE with DB, chunked upload, architecture detection |
-| `api/optimizations.py` | Complete | POST/GET/DELETE with background tasks, cancellation |
+| `api/optimizations.py` | Complete | POST/GET/DELETE with background tasks, cancellation (total_phases=7) |
 | `api/candidates.py` | Complete | GET candidates for optimization |
 | `api/benchmarks.py` | Complete | GET benchmarks with hardware filter, Pareto query |
 | `api/exports.py` | Complete | POST/GET exports with FileResponse download |
@@ -76,6 +79,16 @@ Phase 5 in progress. GitHub pushed. Next: Deploy to HuggingFace Spaces, create s
 | `model_service.py` | Complete | save_model, delete_model_file, detect_architecture |
 | `optimization_service.py` | Complete | start_optimization, cancel_optimization (background tasks) |
 | `benchmark_service.py` | Complete | store_benchmark_result, get_benchmarks_for_candidate |
+
+## Frontend Status
+| Page | Status | Key Features |
+|------|--------|--------------|
+| Landing (`page.tsx`) | Complete | 7-phase pipeline display, hero, stats |
+| Upload (`upload/page.tsx`) | Complete | Drag-drop, framework detection |
+| Optimize (`optimize/page.tsx`) | Complete | Hardware selector, 3 constraint sliders, 2 hyperparameter sliders (n_trials, timeout) |
+| Results (`results/page.tsx`) | Complete | 7-phase progress dots, expandable candidates, Pareto chart, Best Hyperparameters card |
+| Export (`export/page.tsx`) | Complete | Format selection, download |
+| API types (`lib/api.ts`) | Complete | `HyperparameterConfig`, `TuningResult` interfaces |
 
 ## People / Context
 - Hackathon project targeting AMD judges

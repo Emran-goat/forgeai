@@ -5,6 +5,9 @@ import {
   BarChart3,
   Download,
   ArrowRight,
+  Layers,
+  GitBranch,
+  Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -18,20 +21,41 @@ const steps = [
   },
   {
     num: "02",
-    icon: Zap,
-    title: "Optimize",
-    description: "Hardware-aware pruning, quantization, and distillation.",
+    icon: Layers,
+    title: "Architecture Search",
+    description: "Explore candidate architectures for your hardware target.",
     href: "/optimize",
   },
   {
     num: "03",
-    icon: BarChart3,
-    title: "Benchmark",
-    description: "Compare candidates on the Pareto frontier.",
-    href: "/results",
+    icon: Zap,
+    title: "Optimize",
+    description: "Pruning, quantization, and knowledge distillation.",
+    href: "/optimize",
   },
   {
     num: "04",
+    icon: BarChart3,
+    title: "Benchmark",
+    description: "Measure latency, memory, and accuracy on target hardware.",
+    href: "/results",
+  },
+  {
+    num: "05",
+    icon: GitBranch,
+    title: "Pareto Analysis",
+    description: "Find optimal trade-offs across the multi-objective frontier.",
+    href: "/results",
+  },
+  {
+    num: "06",
+    icon: Settings2,
+    title: "Hyperparameter Tuning",
+    description: "Auto-tune learning rates, batch sizes, and schedules.",
+    href: "/optimize",
+  },
+  {
+    num: "07",
     icon: Download,
     title: "Export",
     description: "Deploy-ready ONNX or TorchScript output.",
@@ -90,10 +114,10 @@ export default function HomePage() {
             Process
           </p>
           <h2 className="stagger-5 text-2xl font-light text-center text-[#0f0f0f] mb-16 tracking-tight">
-            Four steps to production
+            Seven phases to production
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px bg-[#1a1a2e]/8 rounded-lg overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-[#1a1a2e]/8 rounded-lg overflow-hidden">
             {steps.map((step, i) => (
               <Link
                 key={step.href}

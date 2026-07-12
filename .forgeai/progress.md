@@ -19,8 +19,9 @@
 | 2.4 | `backend/core/quantization.py` | Complete | INT8/INT4/FP8, QAT, model export |
 | 2.5 | `backend/core/benchmark.py` | Complete | GPU/CPU benchmark, FLOPs, VRAM measurement |
 | 2.6 | `backend/core/pareto.py` | Complete | Non-dominated sorting, crowding distance, knee point |
-| 2.7 | `backend/core/optimizer.py` | Complete | 6-phase orchestrator with progress callbacks, cancellation |
-| 2.8 | Code review + critical fixes | Complete | Fixed dummy models, device mismatch, callback await |
+| 2.7 | `backend/core/optimizer.py` | Complete | 7-phase orchestrator with progress callbacks, cancellation |
+| 2.8 | `backend/core/hyperparameter.py` | Complete | Optuna tuner with MedianPruner, constraint handling, convergence tracking |
+| 2.9 | Code review + critical fixes | Complete | Fixed dummy models, device mismatch, callback await |
 
 ## Phase 3: API & Integration
 | # | Task | Status | Notes |
@@ -32,6 +33,7 @@
 | 3.5 | Export endpoints (ONNX, TorchScript) | Complete | Real ONNX/TorchScript export, DB integration, FileResponse download |
 | 3.6 | Connect frontend to backend | Pending | |
 | 3.7 | End-to-end test | Pending | |
+| 3.8 | API wiring for 7-phase optimization | Complete | total_phases updated to 7, DB default updated |
 
 ## Phase 4: Frontend
 | # | Task | Status | Notes |
@@ -45,6 +47,9 @@
 | 4.7 | Export/download page | Complete | Format selection, summary card, download link |
 | 4.8 | Japanese minimalist redesign | Complete | Wabi-sabi palette, ma spacing, thin borders, vermilion accent |
 | 4.9 | Layout + global styles | Complete | Sidebar nav, CSS variables, fade-in animations |
+| 4.10 | 7-phase pipeline display | Complete | Landing page: 7 steps, progress dots, hyperparameter tuning UI |
+| 4.11 | Hyperparameter tuning UI | Complete | n_trials slider (10-200), timeout slider (600-7200s), best params card |
+| 4.12 | API types for hyperparams | Complete | `HyperparameterConfig`, `TuningResult` interfaces in `lib/api.ts` |
 
 ## Phase 5: Polish & Demo
 | # | Task | Status | Notes |
@@ -52,7 +57,7 @@
 | 5.1 | End-to-end testing | Complete | All 8 verification items pass |
 | 5.2 | Demo script | Complete | `DEMO_SCRIPT.md` — 7 sections, ~110 words, humanized |
 | 5.3 | README + docs | Complete | Root README with architecture, API, quickstart |
-| 5.4 | Demo video | Complete | Remotion 1920×1080, 56s, 3.3 MB, 8 scenes |
+| 5.4 | Demo video | Complete | Remotion 1920x1080, 56s, 3.3 MB, 8 scenes |
 | 5.5 | Final polish | Complete | README humanized, code reviewed |
 | 5.6 | Deploy + submit | In Progress | GitHub pushed, HuggingFace pending |
 | 5.7 | Fireworks AI integration | Complete | API client, benchmark endpoint, AMD MI300X backend |
@@ -67,4 +72,4 @@
 - [x] Code review completed — critical security issues fixed (C1: torch.load weights_only, C2: chunked upload, M1: path traversal)
 
 ---
-Last updated: 2026-07-09
+Last updated: 2026-07-10

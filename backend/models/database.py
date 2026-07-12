@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS optimizations (
     model_id TEXT NOT NULL,
     hardware_target TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'queued',
-    total_phases INTEGER NOT NULL DEFAULT 6,
+    total_phases INTEGER NOT NULL DEFAULT 7,
     current_phase TEXT,
     constraints TEXT,
     objectives TEXT,

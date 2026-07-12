@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   Inbox,
+  Check,
 } from "lucide-react";
 import {
   ScatterChart,
@@ -29,7 +30,19 @@ interface OptimizationRow extends Optimization {
   bestLatency?: number;
   bestAccuracy?: number;
   candidateCount?: number;
+  completedPhases?: number;
+  bestHyperparams?: Record<string, number>;
 }
+
+const PHASES = [
+  "Architecture Search",
+  "Distillation",
+  "Pruning",
+  "Quantization",
+  "Benchmark",
+  "Pareto Analysis",
+  "Hyperparameter Tuning",
+];
 
 const MOCK_OPTIMIZATIONS: OptimizationRow[] = [
   {
@@ -39,6 +52,8 @@ const MOCK_OPTIMIZATIONS: OptimizationRow[] = [
     status: "completed",
     created_at: new Date(Date.now() - 3600000).toISOString(),
     constraints: { max_latency_ms: 50, max_memory_mb: 4096, min_accuracy: 90 },
+    completedPhases: 7,
+    bestHyperparams: { learning_rate: 0.0003, batch_size: 32, weight_decay: 0.01, warmup_steps: 5 },
     candidateCount: 5,
     bestLatency: 18.3,
     bestAccuracy: 96.2,
@@ -57,6 +72,8 @@ const MOCK_OPTIMIZATIONS: OptimizationRow[] = [
     status: "completed",
     created_at: new Date(Date.now() - 7200000).toISOString(),
     constraints: { max_latency_ms: 40, max_memory_mb: 3072, min_accuracy: 88 },
+    completedPhases: 6,
+    bestHyperparams: { learning_rate: 0.0005, batch_size: 16, weight_decay: 0.005 },
     candidateCount: 4,
     bestLatency: 12.9,
     bestAccuracy: 95.7,
@@ -74,6 +91,8 @@ const MOCK_OPTIMIZATIONS: OptimizationRow[] = [
     status: "completed",
     created_at: new Date(Date.now() - 10800000).toISOString(),
     constraints: { max_latency_ms: 80, max_memory_mb: 4096, min_accuracy: 85 },
+    completedPhases: 7,
+    bestHyperparams: { learning_rate: 0.001, batch_size: 64, weight_decay: 0.02, warmup_steps: 10 },
     candidateCount: 6,
     bestLatency: 32.4,
     bestAccuracy: 89.6,
@@ -87,6 +106,68 @@ const MOCK_OPTIMIZATIONS: OptimizationRow[] = [
     ],
   },
 ];
+
+function PhaseProgress({ completedPhases = 0 }: { completedPhases?: number }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      {PHASES.map((phase, i) => {
+        const isCompleted = i < completedPhases;
+        const isCurrent = i === completedPhases - 1;
+        return (
+          <div key={phase} className="group relative">
+            <div
+              className={cn(
+                "w-2 h-2 rounded-full transition-colors duration-200",
+                isCompleted
+                  ? isCurrent
+                    ? "bg-[#c0392b]"
+                    : "bg-[#0f0f0f]/40"
+                  : "bg-[#e8e4e1]"
+              )}
+            />
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#0f0f0f] text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+              {phase}
+              {isCompleted && <Check className="inline w-2.5 h-2.5 ml-1" />}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function BestHyperparamsCard({ params }: { params: Record<string, number> }) {
+  const labels: Record<string, string> = {
+    learning_rate: "Learning Rate",
+    batch_size: "Batch Size",
+    weight_decay: "Weight Decay",
+    warmup_steps: "Warmup Steps",
+    dropout: "Dropout",
+    momentum: "Momentum",
+  };
+
+  return (
+    <div className="border border-[#1a1a2e]/6 rounded-md p-4 bg-white">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-[10px] uppercase tracking-[0.15em] text-[#1a1a2e]/30 font-medium">
+          Best Hyperparameters
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+        {Object.entries(params).map(([key, value]) => (
+          <div key={key} className="flex items-center justify-between">
+            <span className="text-xs text-[#1a1a2e]/40">
+              {labels[key] ?? key.replace(/_/g, " ")}
+            </span>
+            <span className="text-xs font-mono text-[#0f0f0f] tabular-nums">
+              {typeof value === "number" ? (value < 1 ? value.toExponential(1) : value) : value}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function SkeletonRow() {
   return (
@@ -148,6 +229,7 @@ export default function ResultsPage() {
               return {
                 ...opt,
                 candidates,
+                completedPhases: opt.status === "completed" ? 7 : opt.status === "running" ? 3 : 0,
                 bestLatency: completed.length
                   ? Math.min(...completed.map((c) => c.latency_ms))
                   : undefined,
@@ -242,20 +324,20 @@ export default function ResultsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#1a1a2e]/8">
-                  {["Model", "Hardware", "Status", "Candidates", "Best Latency", "Best Accuracy"].map(
-                    (h) => (
-                      <th
-                        key={h}
-                        className="px-5 py-3 text-left text-xs font-medium text-[#1a1a2e]/40 uppercase tracking-wider"
-                      >
-                        {h}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {Array.from({ length: 4 }).map((_, i) => (
+                    {["Model", "Hardware", "Status", "Phases", "Best Latency", "Best Accuracy"].map(
+                      (h) => (
+                        <th
+                          key={h}
+                          className="px-5 py-3 text-left text-xs font-medium text-[#1a1a2e]/40 uppercase tracking-wider"
+                        >
+                          {h}
+                        </th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {Array.from({ length: 4 }).map((_, i) => (
                   <SkeletonRow key={i} />
                 ))}
               </tbody>
@@ -278,7 +360,7 @@ export default function ResultsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#1a1a2e]/8">
-                    {["Model", "Hardware", "Status", "Candidates", "Best Latency", "Best Accuracy"].map(
+                    {["Model", "Hardware", "Status", "Phases", "Best Latency", "Best Accuracy"].map(
                       (h) => (
                         <th
                           key={h}
@@ -419,9 +501,7 @@ function OptimizationRowComponent({
           </span>
         </td>
         <td className="px-5 py-4">
-          <span className="text-sm text-[#1a1a2e]/50 tabular-nums">
-            {opt.candidateCount ?? "—"}
-          </span>
+          <PhaseProgress completedPhases={opt.completedPhases} />
         </td>
         <td className="px-5 py-4">
           <span className="text-sm font-mono text-[#0f0f0f]">
@@ -495,6 +575,11 @@ function OptimizationRowComponent({
                 </tbody>
               </table>
             </div>
+            {opt.bestHyperparams && Object.keys(opt.bestHyperparams).length > 0 && (
+              <div className="mt-3">
+                <BestHyperparamsCard params={opt.bestHyperparams} />
+              </div>
+            )}
             <div className="mt-3 flex justify-end">
               <Link
                 href={`/export?optimization=${opt.id}`}

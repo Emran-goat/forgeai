@@ -35,6 +35,7 @@ class OptimizationPhase(StrEnum):
     QUANTIZE = "quantize"
     BENCHMARK = "benchmark"
     PARETO = "pareto"
+    HYPERPARAMETER_TUNING = "hyperparameter_tuning"
 
 
 @dataclass
@@ -54,7 +55,7 @@ class OptimizationState:
     optimization_id: str
     current_phase: OptimizationPhase
     phases_completed: int = 0
-    total_phases: int = 6
+    total_phases: int = 7
     candidates: list[CandidateInfo] = field(default_factory=list)
     start_time: float = field(default_factory=time.time)
     is_cancelled: bool = False
@@ -148,6 +149,12 @@ class OptimizationOrchestrator:
                 progress_callback,
             )
 
+            tuning_result = await self._run_phase(
+                OptimizationPhase.HYPERPARAMETER_TUNING,
+                lambda: self._phase_hyperparam_tune(candidates),
+                progress_callback,
+            )
+
             duration = time.time() - self.state.start_time
 
             if progress_callback:
@@ -164,6 +171,7 @@ class OptimizationOrchestrator:
                 "status": "completed",
                 "candidates": [c.model_dump() for c in self.state.candidates],
                 "pareto_frontier": result,
+                "hyperparameter_tuning": tuning_result,
                 "total_duration_s": round(duration, 2),
             }
 
@@ -513,6 +521,55 @@ class OptimizationOrchestrator:
             "knee_point": knee_point.model_dump() if knee_point else None,
             "num_objectives": result.num_objectives,
         }
+
+    async def _phase_hyperparam_tune(
+        self, candidates: list[CandidateInfo]
+    ) -> dict[str, Any]:
+        """Tune hyperparameters using Optuna.
+
+        Runs Bayesian optimization over distillation, pruning, and
+        quantization parameters to find the best configuration.
+
+        Args:
+            candidates: List of candidates to tune hyperparameters for.
+
+        Returns:
+            Dictionary with TuningResult data.
+        """
+        from backend.core.hyperparameter import HyperparameterConfig, HyperparameterTuner
+        from backend.models.schemas import ConstraintSet
+
+        constraints_data = self.config.get("constraints", {})
+        constraints = ConstraintSet(**constraints_data) if constraints_data else ConstraintSet()
+
+        weights = self.config.get("objective_weights", {
+            "accuracy": 1.0,
+            "latency": 0.5,
+            "vram": 0.3,
+        })
+
+        hp_config = HyperparameterConfig(
+            n_trials=self.config.get("n_trials", 50),
+            timeout_seconds=self.config.get("tuning_timeout_seconds", 3600),
+            objective_weights=weights,
+            constraints=constraints,
+            hardware_target=self.config.get("hardware_target", "mi300x"),
+        )
+
+        tuner = HyperparameterTuner(hp_config)
+        result = tuner.run_trials(candidates=candidates)
+
+        import asyncio
+        tuning_result = await result if asyncio.iscoroutine(result) else result
+
+        for candidate in candidates:
+            if candidate.metrics and tuning_result.best_params:
+                pr = tuning_result.best_params.get("pruning_ratio", 0.3)
+                qb = tuning_result.best_params.get("quantization_bits", 8)
+                reduction = pr * (1.0 - qb / 32.0)
+                candidate.params_m = round(candidate.params_m * (1.0 - max(0.0, reduction)), 2)
+
+        return tuning_result.model_dump()
 
 
 class CancellationError(Exception):

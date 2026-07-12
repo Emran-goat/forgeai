@@ -132,7 +132,7 @@ async def create_optimization(
             request.model_id,
             request.hardware_target.value,
             OptimizationStatus.QUEUED.value,
-            6,
+            7,
             None,
             constraints_json,
             objectives_json,
@@ -160,7 +160,7 @@ async def create_optimization(
         status=OptimizationStatus.QUEUED,
         created_at=datetime.fromisoformat(now),
         hardware_target=request.hardware_target.value,
-        total_phases=6,
+        total_phases=7,
         current_phase=None,
     )
 

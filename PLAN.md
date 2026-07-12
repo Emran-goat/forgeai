@@ -243,7 +243,7 @@ graph TD
   "status": "queued",
   "created_at": "2026-07-09T10:00:00Z",
   "hardware_target": "mi300x",
-  "total_phases": 6,
+  "total_phases": 7,
   "current_phase": null
 }
 ```

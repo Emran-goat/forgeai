@@ -61,6 +61,18 @@ export interface Candidate {
   is_pareto_optimal: boolean;
 }
 
+export interface HyperparameterConfig {
+  n_trials: number;
+  timeout_seconds: number;
+}
+
+export interface TuningResult {
+  best_params: Record<string, number>;
+  best_value: number;
+  n_trials_completed: number;
+  convergence_trial: number;
+}
+
 export interface Benchmark {
   id: string;
   candidate_id: string;
@@ -94,11 +106,12 @@ export async function uploadModel(file: File, framework: string): Promise<Model>
 export async function createOptimization(
   modelId: string,
   hardware: string,
-  constraints: Optimization["constraints"]
+  constraints: Optimization["constraints"],
+  hyperparams?: HyperparameterConfig
 ): Promise<Optimization> {
   return request<Optimization>("/api/optimizations", {
     method: "POST",
-    body: { model_id: modelId, hardware, constraints },
+    body: { model_id: modelId, hardware, constraints, hyperparams },
   });
 }
 
