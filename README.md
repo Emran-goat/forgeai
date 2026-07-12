@@ -5,7 +5,7 @@
 [![ROCm](https://img.shields.io/badge/ROCm-6.0+-ED1C24.svg)](https://rocm.docs.amd.com/)
 [![Docker](https://img.shields.io/badge/docker-ready-2496ED.svg)](https://www.docker.com/)
 
-Hardware-aware AI model optimization for AMD GPUs. Upload a PyTorch checkpoint, run a 6-phase optimization pipeline (architecture search, distillation, pruning, quantization, benchmarking, Pareto analysis), and export an optimized model for MI300X.
+Hardware-aware AI model optimization for AMD GPUs. Upload a PyTorch checkpoint, run a 7-phase optimization pipeline (architecture search, distillation, pruning, quantization, benchmarking, Pareto analysis, Optuna hyperparameter tuning), and export an optimized model for MI300X.
 
 Built for [AMD Developer Hackathon ACT II, Track 3](https://github.com/Emran-goat/forgeai).
 
@@ -58,7 +58,7 @@ requests.post("http://localhost:8000/api/exports", json={"optimization_id": job_
 forgeai/
 ├── backend/          # FastAPI + PyTorch optimization engine
 │   ├── api/          # REST + WebSocket routes
-│   ├── core/         # 8 optimization modules
+│   ├── core/         # 9 optimization modules
 │   └── services/     # Business logic
 ├── frontend/         # Next.js 14 + shadcn/ui
 ├── demo/             # 7 standalone HTML demos

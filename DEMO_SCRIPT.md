@@ -14,9 +14,9 @@
 
 ### 0:08 - 0:16 | Pipeline
 
-**Show:** 6-phase timeline (architecture search, distillation, pruning, quantization, benchmarking, Pareto analysis).
+**Show:** 7-phase timeline (architecture search, distillation, pruning, quantization, benchmarking, Pareto analysis, Optuna hyperparameter tuning).
 
-**Say:** "Upload a model, and ForgeAI runs it through six optimization phases. Each one runs on your local AMD hardware or through our Fireworks integration."
+**Say:** "Upload a model, and ForgeAI runs it through seven optimization phases. Each one runs on your local AMD hardware or through our Fireworks integration."
 
 ---
 

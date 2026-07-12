@@ -66,7 +66,7 @@ ForgeAI is a hardware-aware AI model optimization platform that automatically fi
 | `quantization.py` | INT8/INT4/FP8 quantization with QAT |
 | `benchmark.py` | GPU/CPU benchmarking with FLOPs and VRAM measurement |
 | `pareto.py` | Multi-objective optimization with Pareto frontier |
-| `optimizer.py` | 6-phase orchestrator with progress callbacks |
+| `optimizer.py` | 7-phase orchestrator with progress callbacks |
 | `export.py` | ONNX and TorchScript export |
 | `fireworks_client.py` | Fireworks AI API client for hosted inference |
 
@@ -90,7 +90,7 @@ ForgeAI is a hardware-aware AI model optimization platform that automatically fi
 1. **Upload**: User uploads PyTorch checkpoint via API
 2. **Detection**: System detects model architecture (ViT, ResNet, etc.)
 3. **Search**: Generates candidate architectures from search space
-4. **Optimize**: Runs 6-phase pipeline (search → distill → prune → quantize → benchmark → Pareto)
+4. **Optimize**: Runs 7-phase pipeline (search → distill → prune → quantize → benchmark → Pareto → hyperparameter tuning)
 5. **Results**: Returns Pareto frontier with optimal candidates
 6. **Export**: Exports selected model to ONNX/TorchScript
 

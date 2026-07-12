@@ -64,7 +64,7 @@ class OptimizationState:
 class OptimizationOrchestrator:
     """Orchestrates the full optimization pipeline.
 
-    Manages the lifecycle of an optimization run through all six phases,
+    Manages the lifecycle of an optimization run through all seven phases,
     from architecture search to Pareto frontier computation. Supports
     progress callbacks for WebSocket streaming and graceful cancellation.
 
@@ -96,7 +96,7 @@ class OptimizationOrchestrator:
     ) -> dict[str, Any]:
         """Execute the full optimization pipeline.
 
-        Runs all six phases sequentially, reporting progress via callback
+        Runs all seven phases sequentially, reporting progress via callback
         and handling cancellation at each phase boundary.
 
         Args:

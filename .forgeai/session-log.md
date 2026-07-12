@@ -68,7 +68,7 @@
 
 7. **Optimizer** (`optimizer.py`) — Complete
    - `OptimizationOrchestrator` class
-   - 6-phase pipeline: SEARCH → DISTILL → PRUNE → QUANTIZE → BENCHMARK → PARETO
+   - 7-phase pipeline: SEARCH → DISTILL → PRUNE → QUANTIZE → BENCHMARK → PARETO → HYPERPARAMETER_TUNING
    - Progress callbacks (awaited)
    - Cancellation support
    - Logging on errors
