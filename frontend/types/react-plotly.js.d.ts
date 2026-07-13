@@ -1,3 +1,38 @@
+declare namespace Plotly {
+  interface Data {
+    [key: string]: unknown;
+  }
+
+  interface Layout {
+    [key: string]: unknown;
+  }
+
+  interface Config {
+    [key: string]: unknown;
+  }
+
+  interface Frame {
+    [key: string]: unknown;
+  }
+
+  interface Figure {
+    data: Data[];
+    layout: Layout;
+  }
+
+  type PlotMouseEvent = { points: Array<{ curveNumber: number; pointNumber: number; data: Data }> };
+  type PlotSelectionEvent = PlotMouseEvent;
+  type LegendClickEvent = { event: MouseEvent; nextLevel: string[]; curveNumber: number };
+  type LegendDoubleClickEvent = LegendClickEvent;
+  type RelayoutEvent = Record<string, unknown>;
+  type RestyleEvent = [Record<string, unknown>, number[], number[]];
+  type ButtonClickEvent = { event: MouseEvent };
+  type FrameAnimationEvent = { name: string; animation: { frame: Frame; trace: number; group: string } };
+  type SliderChangeEvent = { slider: { active: number }; previousActive: number };
+  type SliderEndEvent = SliderChangeEvent;
+  type ClickAnnotationEvent = { event: MouseEvent; index: number; fullAnnotation: string };
+}
+
 declare module "react-plotly.js" {
   import { Component } from "react";
 
