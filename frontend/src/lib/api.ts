@@ -215,7 +215,7 @@ export async function chatWithAssistant(
   context?: Record<string, unknown>,
   history: ChatHistoryMessage[] = []
 ): Promise<ReadableStream<ChatStreamChunk>> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/assistant/chat/stream`, {
+  const response = await fetch(`/api/v1/assistant/chat/stream`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, context, history }),

@@ -140,6 +140,9 @@ export function AIAssistant({
           <span className="text-xs font-medium text-[#0f0f0f] tracking-wide">
             AI Assistant
           </span>
+          <span className="px-2 py-0.5 text-[10px] font-medium text-[#1a1a2e]/30 border border-[#e8e4e1] rounded uppercase tracking-wider">
+            Powered by Gemma 4
+          </span>
         </div>
         <button
           onClick={onClose}
