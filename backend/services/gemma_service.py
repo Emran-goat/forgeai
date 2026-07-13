@@ -22,20 +22,28 @@ class GemmaService:
     """Client for Fireworks Gemma 4 API."""
 
     def __init__(self) -> None:
-        if not settings.fireworks_api_key:
-            raise GemmaServiceError(
-                "Fireworks API key not configured. Set FORGEAI_FIREWORKS_API_KEY."
+        self._client: httpx.AsyncClient | None = None
+
+    def _ensure_client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            if not settings.fireworks_api_key:
+                raise GemmaServiceError(
+                    "Fireworks API key not configured. "
+                    "Set FORGEAI_FIREWORKS_API_KEY environment variable."
+                )
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(DEFAULT_TIMEOUT),
+                headers={
+                    "Authorization": f"Bearer {settings.fireworks_api_key}",
+                    "Content-Type": "application/json",
+                },
             )
-        self._client = httpx.AsyncClient(
-            timeout=httpx.Timeout(DEFAULT_TIMEOUT),
-            headers={
-                "Authorization": f"Bearer {settings.fireworks_api_key}",
-                "Content-Type": "application/json",
-            },
-        )
+        return self._client
 
     async def close(self) -> None:
-        await self._client.aclose()
+        if self._client:
+            await self._client.aclose()
+            self._client = None
 
     async def chat(
         self,
@@ -78,8 +86,9 @@ class GemmaService:
         return result if isinstance(result, str) else ""
 
     async def _blocking_response(self, payload: dict[str, Any]) -> str:
+        client = self._ensure_client()
         try:
-            response = await self._client.post(FIREWORKS_API_URL, json=payload)
+            response = await client.post(FIREWORKS_API_URL, json=payload)
             response.raise_for_status()
             data = response.json()
             return data["choices"][0]["message"]["content"]
@@ -95,8 +104,9 @@ class GemmaService:
     async def _stream_response(
         self, payload: dict[str, Any]
     ) -> AsyncIterator[str]:
+        client = self._ensure_client()
         try:
-            async with self._client.stream(
+            async with client.stream(
                 "POST", FIREWORKS_API_URL, json=payload
             ) as response:
                 response.raise_for_status()
