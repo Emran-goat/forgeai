@@ -71,7 +71,7 @@ export function AICharts({ data, className }: AIChartsProps) {
         <Plot
           data={chartData.chart.data as Plotly.Data[]}
           layout={{
-            ...chartData.chart.layout,
+            ...(chartData.chart.layout as Record<string, unknown>),
             autosize: true,
             margin: { t: 30, r: 20, b: 40, l: 50 },
             paper_bgcolor: "transparent",
@@ -82,12 +82,12 @@ export function AICharts({ data, className }: AIChartsProps) {
               color: "#1a1a2e",
             },
             xaxis: {
-              ...chartData.chart.layout.xaxis,
+              ...((chartData.chart.layout.xaxis ?? {}) as Record<string, unknown>),
               gridcolor: "rgba(26, 26, 46, 0.06)",
               zerolinecolor: "rgba(26, 26, 46, 0.06)",
             },
             yaxis: {
-              ...chartData.chart.layout.yaxis,
+              ...((chartData.chart.layout.yaxis ?? {}) as Record<string, unknown>),
               gridcolor: "rgba(26, 26, 46, 0.06)",
               zerolinecolor: "rgba(26, 26, 46, 0.06)",
             },
