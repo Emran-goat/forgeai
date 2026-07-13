@@ -9,16 +9,12 @@ import {
   Loader2,
   ArrowLeft,
   Check,
-  Send,
-  Sparkles,
-  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   getOptimization,
   getCandidates,
   requestExport,
-  exportModel,
   type Candidate,
   type Optimization,
 } from "@/lib/api";
@@ -62,11 +58,6 @@ const MOCK_OPTIMIZATION: Optimization = {
   constraints: { max_latency_ms: 50, max_memory_mb: 4096, min_accuracy: 90 },
 };
 
-interface ChatMessage {
-  role: "user" | "assistant";
-  content: string;
-}
-
 function ExportPageInner() {
   const searchParams = useSearchParams();
   const optimizationId = searchParams.get("optimization");
@@ -79,11 +70,6 @@ function ExportPageInner() {
   const [optimization, setOptimization] = useState<Optimization | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState("");
-  const [chatLoading, setChatLoading] = useState(false);
-  const [exportGuide, setExportGuide] = useState<string | null>(null);
 
   useEffect(() => {
     if (!optimizationId && !candidateIdParam) {
@@ -132,35 +118,6 @@ function ExportPageInner() {
       setDownloadUrl("mock-download-url");
     } finally {
       setExporting(false);
-    }
-  };
-
-  const handleChat = async () => {
-    if (!chatInput.trim() || chatLoading) return;
-    const msg = chatInput.trim();
-    setChatInput("");
-    setChatMessages((prev) => [...prev, { role: "user", content: msg }]);
-    setChatLoading(true);
-
-    try {
-      const response = await exportModel(msg, selectedFormat);
-      setChatMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: response.explanation },
-      ]);
-      if (response.guide) {
-        setExportGuide(response.guide);
-      }
-      if (response.download_url) {
-        setDownloadUrl(response.download_url);
-      }
-    } catch {
-      setChatMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: "Something went wrong. Please try again." },
-      ]);
-    } finally {
-      setChatLoading(false);
     }
   };
 
@@ -310,88 +267,6 @@ function ExportPageInner() {
                 </div>
               </div>
             </div>
-
-            <div className="border border-[#e8e4e1] rounded-lg bg-[#fafaf9] p-4 mb-8">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-4 h-4 text-[#1a1a2e]/40" strokeWidth={1.5} />
-                <span className="text-xs font-medium text-[#0f0f0f] tracking-wide">
-                  Export Assistant
-                </span>
-              </div>
-
-              {chatMessages.length > 0 && (
-                <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                  {chatMessages.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "flex flex-col gap-1",
-                        msg.role === "user" ? "items-end" : "items-start"
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "max-w-[85%] px-3 py-2 rounded-md text-xs leading-relaxed",
-                          msg.role === "user"
-                            ? "bg-[#0f0f0f] text-[#fafaf9]"
-                            : "bg-white border border-[#e8e4e1] text-[#0f0f0f]"
-                        )}
-                      >
-                        {msg.content}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleChat();
-                    }
-                  }}
-                  placeholder="e.g., Export to ONNX and give me a deployment guide for MI300X..."
-                  disabled={chatLoading}
-                  className="flex-1 px-3 py-2 text-xs bg-white border border-[#e8e4e1] rounded-md focus:outline-none focus:border-[#1a1a2e]/20 transition-colors duration-200 placeholder:text-[#1a1a2e]/25 disabled:opacity-40"
-                />
-                <button
-                  onClick={handleChat}
-                  disabled={!chatInput.trim() || chatLoading}
-                  className={cn(
-                    "p-2 rounded-md transition-colors duration-200",
-                    chatInput.trim() && !chatLoading
-                      ? "bg-[#0f0f0f] text-[#fafaf9] hover:bg-[#1a1a2e]"
-                      : "bg-[#e8e4e1]/50 text-[#1a1a2e]/20 cursor-not-allowed"
-                  )}
-                >
-                  {chatLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" strokeWidth={1.5} />
-                  ) : (
-                    <Send className="w-3.5 h-3.5" strokeWidth={1.5} />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {exportGuide && (
-              <div className="border border-[#e8e4e1] rounded-lg bg-white p-6 mb-8 summary-animate">
-                <h2 className="text-sm font-medium text-[#0f0f0f] mb-4 tracking-wide">
-                  Deployment Guide
-                </h2>
-                <div className="prose prose-xs max-w-none text-[#1a1a2e]/60 leading-relaxed">
-                  {exportGuide.split("\n").map((line, i) => (
-                    <p key={i} className="mb-2">
-                      {line}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {error && (
               <div className="mb-6 text-xs text-[#c0392b] bg-[#c0392b]/5 border border-[#c0392b]/10 rounded-md px-4 py-3">

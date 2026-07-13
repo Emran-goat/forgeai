@@ -17,7 +17,6 @@ export interface OptimizationMessage {
 }
 
 export type MessageHandler = (message: OptimizationMessage) => void;
-export type StatusHandler = (status: "connecting" | "connected" | "disconnected" | "error") => void;
 
 export class OptimizationWebSocket {
   private ws: WebSocket | null = null;
@@ -25,9 +24,6 @@ export class OptimizationWebSocket {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private handlers: Set<MessageHandler> = new Set();
-  private statusHandlers: Set<StatusHandler> = new Set();
-  private optimizationId: string = "";
-  private intentionalClose = false;
 
   constructor(private baseUrl: string = "ws://localhost:8000") {}
 
@@ -36,16 +32,12 @@ export class OptimizationWebSocket {
       return;
     }
 
-    this.optimizationId = optimizationId;
-    this.intentionalClose = false;
-    this.emitStatus("connecting");
-
     const url = `${this.baseUrl}/ws/optimization/${optimizationId}`;
     this.ws = new WebSocket(url);
 
     this.ws.onopen = () => {
+      console.log("WebSocket connected");
       this.reconnectAttempts = 0;
-      this.emitStatus("connected");
     };
 
     this.ws.onmessage = (event) => {
@@ -57,30 +49,22 @@ export class OptimizationWebSocket {
       }
     };
 
-    this.ws.onclose = (event) => {
-      if (this.intentionalClose) {
-        this.emitStatus("disconnected");
-        return;
-      }
-      if (event.code === 1006) {
-        this.emitStatus("error");
-      }
-      this.attemptReconnect();
+    this.ws.onclose = () => {
+      console.log("WebSocket closed");
+      this.attemptReconnect(optimizationId);
     };
 
-    this.ws.onerror = () => {
-      this.emitStatus("error");
+    this.ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
     };
   }
 
   disconnect(): void {
-    this.intentionalClose = true;
     if (this.ws) {
       this.ws.close();
       this.ws = null;
     }
     this.handlers.clear();
-    this.statusHandlers.clear();
   }
 
   onMessage(handler: MessageHandler): () => void {
@@ -90,43 +74,30 @@ export class OptimizationWebSocket {
     };
   }
 
-  onStatus(handler: StatusHandler): () => void {
-    this.statusHandlers.add(handler);
-    return () => {
-      this.statusHandlers.delete(handler);
-    };
-  }
-
-  private emitStatus(status: "connecting" | "connected" | "disconnected" | "error"): void {
-    this.statusHandlers.forEach((handler) => handler(status));
-  }
-
-  private attemptReconnect(): void {
+  private attemptReconnect(optimizationId: string): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      this.emitStatus("error");
+      console.error("Max reconnection attempts reached");
       return;
     }
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
 
-    setTimeout(() => this.connect(this.optimizationId), delay);
+    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+    setTimeout(() => this.connect(optimizationId), delay);
   }
 }
 
 export function connectOptimization(
   optimizationId: string,
-  onMessage: MessageHandler,
-  onStatus?: StatusHandler
+  onMessage: MessageHandler
 ): () => void {
   const ws = new OptimizationWebSocket();
   ws.connect(optimizationId);
-  const unsubscribeMsg = ws.onMessage(onMessage);
-  const unsubscribeStatus = onStatus ? ws.onStatus(onStatus) : () => {};
+  const unsubscribe = ws.onMessage(onMessage);
 
   return () => {
-    unsubscribeMsg();
-    unsubscribeStatus();
+    unsubscribe();
     ws.disconnect();
   };
 }

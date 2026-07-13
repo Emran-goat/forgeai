@@ -6,8 +6,6 @@ import {
   ArrowUpRight,
   Inbox,
   Check,
-  MessageSquare,
-  ChevronRight,
 } from "lucide-react";
 import {
   ScatterChart,
@@ -17,6 +15,7 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
 import { cn } from "@/lib/utils";
 import {
@@ -25,8 +24,6 @@ import {
   type Optimization,
   type Candidate,
 } from "@/lib/api";
-import { AIAssistant } from "@/components/ai-assistant";
-import { PreloadedPrompts } from "@/components/ai-preloaded-prompts";
 
 interface OptimizationRow extends Optimization {
   candidates?: Candidate[];
@@ -219,8 +216,6 @@ export default function ResultsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [chartData, setChartData] = useState<Candidate[]>([]);
   const [showMock, setShowMock] = useState(false);
-  const [aiOpen, setAiOpen] = useState(false);
-  const [selectedOptId, setSelectedOptId] = useState<string | undefined>();
   const hasAnimated = useRef(false);
 
   useEffect(() => {
@@ -279,7 +274,6 @@ export default function ResultsPage() {
       return;
     }
     setExpandedId(opt.id);
-    setSelectedOptId(opt.id);
     if (!opt.candidates?.length) {
       try {
         const candidates = await getCandidates(opt.id);
@@ -316,29 +310,13 @@ export default function ResultsPage() {
   return (
     <div className="min-h-full">
       <div className="max-w-6xl mx-auto px-6 py-20">
-        <header className="mb-16 flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-light tracking-tight text-[#0f0f0f] mb-3">
-              Results
-            </h1>
-            <p className="text-[#1a1a2e]/50 text-sm tracking-wide">
-              {showMock ? "Demo results with sample optimizations" : "Optimization runs and Pareto analysis"}
-            </p>
-          </div>
-          {!loading && optimizations.length > 0 && (
-            <button
-              onClick={() => setAiOpen(!aiOpen)}
-              className={cn(
-                "inline-flex items-center gap-2 px-4 py-2.5 text-xs tracking-wide rounded-md border transition-all duration-200",
-                aiOpen
-                  ? "bg-[#0f0f0f] text-[#fafaf9] border-[#0f0f0f]"
-                  : "bg-white text-[#0f0f0f] border-[#e8e4e1] hover:border-[#1a1a2e]/15"
-              )}
-            >
-              <MessageSquare className="w-3.5 h-3.5" strokeWidth={1.5} />
-              Ask AI
-            </button>
-          )}
+        <header className="mb-16">
+          <h1 className="text-3xl font-light tracking-tight text-[#0f0f0f] mb-3">
+            Results
+          </h1>
+          <p className="text-[#1a1a2e]/50 text-sm tracking-wide">
+            {showMock ? "Demo results with sample optimizations" : "Optimization runs and Pareto analysis"}
+          </p>
         </header>
 
         {loading ? (
@@ -377,131 +355,97 @@ export default function ResultsPage() {
             </Link>
           </div>
         ) : (
-          <div className="flex gap-6">
-            <div className={cn("flex-1 min-w-0", aiOpen && "lg:flex-[2]")}>
-              <div className="border border-[#1a1a2e]/8 rounded-md overflow-hidden bg-white mb-16">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-[#1a1a2e]/8">
-                      {["Model", "Hardware", "Status", "Phases", "Best Latency", "Best Accuracy"].map(
-                        (h) => (
-                          <th
-                            key={h}
-                            className="px-5 py-3 text-left text-xs font-medium text-[#1a1a2e]/40 uppercase tracking-wider"
-                          >
-                            {h}
-                          </th>
-                        )
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {optimizations.map((opt, i) => (
-                      <OptimizationRowComponent
-                        key={opt.id}
-                        opt={opt}
-                        expanded={expandedId === opt.id}
-                        onExpand={() => handleExpand(opt)}
-                        formatDate={formatDate}
-                        rowIndex={i}
+          <>
+            <div className="border border-[#1a1a2e]/8 rounded-md overflow-hidden bg-white mb-16">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#1a1a2e]/8">
+                    {["Model", "Hardware", "Status", "Phases", "Best Latency", "Best Accuracy"].map(
+                      (h) => (
+                        <th
+                          key={h}
+                          className="px-5 py-3 text-left text-xs font-medium text-[#1a1a2e]/40 uppercase tracking-wider"
+                        >
+                          {h}
+                        </th>
+                      )
+                    )}
+                  </tr>
+                </thead>
+                <tbody>
+                  {optimizations.map((opt, i) => (
+                    <OptimizationRowComponent
+                      key={opt.id}
+                      opt={opt}
+                      expanded={expandedId === opt.id}
+                      onExpand={() => handleExpand(opt)}
+                      formatDate={formatDate}
+                      rowIndex={i}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {chartData.length > 0 && (
+              <section>
+                <h2 className="text-lg font-light text-[#0f0f0f] mb-2">
+                  Pareto Frontier
+                </h2>
+                <p className="text-xs text-[#1a1a2e]/40 mb-8 tracking-wide">
+                  Latency vs accuracy · size = memory
+                </p>
+                <div className="border border-[#1a1a2e]/8 rounded-md bg-white p-6">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="#1a1a2e"
+                        strokeOpacity={0.06}
+                        vertical={false}
                       />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {chartData.length > 0 && (
-                <section>
-                  <h2 className="text-lg font-light text-[#0f0f0f] mb-2">
-                    Pareto Frontier
-                  </h2>
-                  <p className="text-xs text-[#1a1a2e]/40 mb-8 tracking-wide">
-                    Latency vs accuracy · size = memory
-                  </p>
-                  <div className="border border-[#1a1a2e]/8 rounded-md bg-white p-6">
-                    <ResponsiveContainer width="100%" height={400}>
-                      <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 10 }}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          stroke="#1a1a2e"
-                          strokeOpacity={0.06}
-                          vertical={false}
-                        />
-                        <XAxis
-                          type="number"
-                          dataKey="latency_ms"
-                          name="Latency"
-                          unit=" ms"
-                          tick={{ fill: "#1a1a2e", opacity: 0.4, fontSize: 11 }}
-                          axisLine={{ stroke: "#1a1a2e", strokeOpacity: 0.08 }}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          type="number"
-                          dataKey="accuracy"
-                          name="Accuracy"
-                          unit="%"
-                          tick={{ fill: "#1a1a2e", opacity: 0.4, fontSize: 11 }}
-                          axisLine={{ stroke: "#1a1a2e", strokeOpacity: 0.08 }}
-                          tickLine={false}
-                        />
-                        <Tooltip content={<CustomTooltip />} cursor={false} />
-                        <Scatter data={chartData} shape={(props: any) => {
-                          const { cx, cy, payload } = props;
-                          const r = Math.max(4, Math.min(10, payload.memory_mb / 200));
-                          return (
-                            <circle
-                              cx={cx}
-                              cy={cy}
-                              r={r}
-                              fill={payload.is_pareto_optimal ? "#c0392b" : "#1a1a2e"}
-                              fillOpacity={payload.is_pareto_optimal ? 1 : 0.25}
-                              className="animate-[dotScaleIn_0.4s_cubic-bezier(0.16,1,0.3,1)_both]"
-                              style={{
-                                transformOrigin: `${cx}px ${cy}px`,
-                              }}
-                            />
-                          );
-                        }} />
-                      </ScatterChart>
-                    </ResponsiveContainer>
-                  </div>
-                </section>
-              )}
-
-              {!aiOpen && !loading && optimizations.length > 0 && (
-                <div className="mt-8">
-                  <PreloadedPrompts
-                    onSelect={(prompt) => {
-                      setAiOpen(true);
-                    }}
-                    category="all"
-                  />
+                      <XAxis
+                        type="number"
+                        dataKey="latency_ms"
+                        name="Latency"
+                        unit=" ms"
+                        tick={{ fill: "#1a1a2e", opacity: 0.4, fontSize: 11 }}
+                        axisLine={{ stroke: "#1a1a2e", strokeOpacity: 0.08 }}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        type="number"
+                        dataKey="accuracy"
+                        name="Accuracy"
+                        unit="%"
+                        tick={{ fill: "#1a1a2e", opacity: 0.4, fontSize: 11 }}
+                        axisLine={{ stroke: "#1a1a2e", strokeOpacity: 0.08 }}
+                        tickLine={false}
+                      />
+                      <Tooltip content={<CustomTooltip />} cursor={false} />
+                      <Scatter data={chartData} shape={(props: any) => {
+                        const { cx, cy, payload } = props;
+                        const r = Math.max(4, Math.min(10, payload.memory_mb / 200));
+                        return (
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r={r}
+                            fill={payload.is_pareto_optimal ? "#c0392b" : "#1a1a2e"}
+                            fillOpacity={payload.is_pareto_optimal ? 1 : 0.25}
+                            className="animate-[dotScaleIn_0.4s_cubic-bezier(0.16,1,0.3,1)_both]"
+                            style={{
+                              transformOrigin: `${cx}px ${cy}px`,
+                            }}
+                          />
+                        );
+                      }} />
+                    </ScatterChart>
+                  </ResponsiveContainer>
                 </div>
-              )}
-            </div>
-
-            <div
-              className={cn(
-                "hidden lg:block transition-all duration-300 overflow-hidden",
-                aiOpen ? "w-96 opacity-100" : "w-0 opacity-0"
-              )}
-            >
-              <div className="h-[calc(100vh-200px)] sticky top-24">
-                <AIAssistant
-                  isOpen={aiOpen}
-                  onClose={() => setAiOpen(false)}
-                  optimizationId={selectedOptId}
-                  context={{
-                    pipeline_state: "complete",
-                    results: {
-                      candidates: chartData.slice(0, 10),
-                    },
-                  }}
-                />
-              </div>
-            </div>
-          </div>
+              </section>
+            )}
+          </>
         )}
       </div>
     </div>

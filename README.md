@@ -87,12 +87,6 @@ forgeai/
 | `/api/benchmarks/fireworks` | GET | Fireworks AI vs local comparison |
 | `/api/exports` | POST/GET | Export optimized models (ONNX/TorchScript) |
 | `/api/hardware` | GET | Hardware specs |
-| `/api/v1/assistant/setup` | POST | Parse natural language into optimization config |
-| `/api/v1/assistant/chat` | POST | Chat with AI about optimization results |
-| `/api/v1/assistant/chat/stream` | POST | Stream chat response (SSE) |
-| `/api/v1/assistant/run` | POST | Let AI decide and trigger optimization |
-| `/api/v1/assistant/visualize` | POST | Generate charts from optimization data |
-| `/api/v1/assistant/export` | POST | AI-assisted model export with deployment guide |
 | `/ws/{job_id}` | WS | Live optimization progress |
 
 ## License

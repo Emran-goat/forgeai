@@ -1,4 +1,3 @@
-ARG CACHE_BUST=1
 FROM node:20-slim AS frontend-build
 WORKDIR /app/frontend
 COPY frontend/package.json ./
