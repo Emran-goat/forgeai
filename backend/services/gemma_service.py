@@ -22,6 +22,10 @@ class GemmaService:
     """Client for Fireworks Gemma 4 API."""
 
     def __init__(self) -> None:
+        if not settings.fireworks_api_key:
+            raise GemmaServiceError(
+                "Fireworks API key not configured. Set FORGEAI_FIREWORKS_API_KEY."
+            )
         self._client = httpx.AsyncClient(
             timeout=httpx.Timeout(DEFAULT_TIMEOUT),
             headers={
