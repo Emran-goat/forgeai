@@ -14,6 +14,7 @@ from backend.api.benchmarks import router as benchmarks_router
 from backend.api.exports import router as exports_router
 from backend.api.hardware import router as hardware_router
 from backend.api.websocket import router as websocket_router
+from backend.api.assistant import router as assistant_router
 from backend.models.database import init_db
 
 
@@ -46,6 +47,7 @@ app.include_router(benchmarks_router, prefix="/api/v1")
 app.include_router(exports_router, prefix="/api/v1")
 app.include_router(hardware_router, prefix="/api/v1")
 app.include_router(websocket_router, prefix="/api/v1")
+app.include_router(assistant_router, prefix="/api/v1")
 
 
 @app.get("/health")

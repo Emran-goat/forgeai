@@ -84,6 +84,26 @@ ForgeAI is a hardware-aware AI model optimization platform that automatically fi
 | `model_service.py` | Model file management and architecture detection |
 | `optimization_service.py` | Background optimization job management |
 | `benchmark_service.py` | Benchmark result storage and retrieval |
+| `gemma_service.py` | Fireworks Gemma 4 API client for AI assistant |
+| `optimization_advisor.py` | Natural language to optimization config translation |
+| `visualization.py` | Auto-chart generation (Pareto, comparison, timeline) |
+
+### 5. AI Assistant (`backend/api/assistant.py`)
+
+| Endpoint | Purpose |
+|----------|---------|
+| `POST /setup` | Natural language → optimization config via Gemma |
+| `POST /chat` | Context-aware chat about results |
+| `POST /chat/stream` | SSE streaming chat response |
+| `POST /run` | AI generates and triggers full optimization |
+| `POST /visualize` | Auto-chart generation with AI explanation |
+| `POST /export` | AI-assisted export with deployment guide |
+
+**Flow:**
+1. User sends natural language request
+2. `gemma_service` calls Fireworks Gemma 4 API
+3. `optimization_advisor` parses response into structured config
+4. Response includes config, explanation, and suggested follow-ups
 
 ## Data Flow
 
